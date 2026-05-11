@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — NovaShelves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #0f0f18; --bg3: #141420;
+    --surface: #1a1a28; --surface2: #202030;
+    --border: #2a2a40; --border2: #353550;
+    --accent: #c8a96e; --accent2: #e8c98e;
+    --text: #e0ddf0; --text2: #9896b4; --text3: #5f5d78;
+    --red: #e05c6a; --green: #5ce0a0; --blue: #6ab4e0;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-serif; font-weight: 300; min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 0 20px; display: flex; align-items: center; gap: 16px; height: 56px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-logo { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .topbar-sub { font-size: 0.75rem; color: var(--text3); }
+  .topbar-sep { flex: 1; }
+  .topbar-link { font-size: 0.82rem; color: var(--text2); text-decoration: none; transition: color 0.2s; }
+  .topbar-link:hover { color: var(--accent); }
+
+  /* GITHUB CONFIG BAR */
+  .config-bar {
+    background: var(--bg3); border-bottom: 1px solid var(--border);
+    padding: 10px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .config-label { font-size: 0.75rem; color: var(--text3); white-space: nowrap; }
+  .config-input {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 5px 10px;
+    font-family: 'Lato', sans-serif; font-size: 0.8rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .config-input:focus { border-color: var(--accent); }
+  .config-input.wide { flex: 1; min-width: 120px; }
+  .config-status { font-size: 0.75rem; margin-left: auto; }
+  .config-status.ok { color: var(--green); }
+  .config-status.err { color: var(--red); }
+  .btn-sm {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 6px; padding: 5px 12px;
+    font-family: 'Lato', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.primary { background: var(--accent); color: #1a1410; border-color: var(--accent); font-weight: 700; }
+  .btn-sm.primary:hover { background: var(--accent2); }
+  .btn-sm.danger { border-color: var(--red); color: var(--red); }
+  .btn-sm.success { background: var(--green); color: #0a1a10; border-color: var(--green); font-weight: 700; }
+
+  /* MAIN LAYOUT */
+  .admin-layout { display: flex; min-height: calc(100vh - 56px - 48px); }
+
+  /* SIDEBAR TABS */
+  .sidebar {
+    width: 180px; background: var(--bg2); border-right: 1px solid var(--border);
+    padding: 16px 0; flex-shrink: 0;
+  }
+  @media (max-width: 600px) { .sidebar { width: 60px; } .tab-label { display: none; } }
+  .tab-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; cursor: pointer;
+    color: var(--text2); font-size: 0.87rem;
+    transition: all 0.18s; border-left: 3px solid transparent;
+  }
+  .tab-item:hover { color: var(--text); background: var(--surface); }
+  .tab-item.active { color: var(--accent); background: var(--surface); border-left-color: var(--accent); }
+  .tab-icon { font-size: 1rem; flex-shrink: 0; }
+
+  /* CONTENT PANEL */
+  .admin-content { flex: 1; padding: 24px 20px; overflow-y: auto; max-width: 860px; }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* SECTION CARD */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px; margin-bottom: 20px;
+  }
+  .card-title {
+    font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--accent);
+    font-weight: 600; letter-spacing: 0.06em;
+    margin-bottom: 16px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* FORM */
+  .form-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .form-group { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { flex: 100%; }
+  label { font-size: 0.78rem; color: var(--text2); }
+  .form-input, .form-select, .form-textarea {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 7px; padding: 9px 12px;
+    font-family: 'Lato', sans-serif; font-size: 0.88rem;
+    outline: none; transition: border-color 0.2s; width: 100%;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-select option { background: var(--bg3); }
+
+  /* TOGGLE */
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .toggle-label { font-size: 0.82rem; color: var(--text2); }
+  .toggle {
+    position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--border); border-radius: 22px; transition: 0.3s;
+  }
+  .toggle-slider:before {
+    content: ''; position: absolute;
+    width: 16px; height: 16px; left: 3px; top: 3px;
+    background: white; border-radius: 50%; transition: 0.3s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+  /* FILE DROP */
+  .file-drop {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 20px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--bg3); margin-bottom: 14px;
+  }
+  .file-drop:hover, .file-drop.dragover { border-color: var(--accent); background: rgba(200,169,110,0.05); }
+  .file-drop-label { font-size: 0.82rem; color: var(--text3); }
+  .file-name { font-size: 0.8rem; color: var(--green); margin-top: 6px; }
+
+  /* OUTPUT LOG */
+  .log-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 12px; font-family: 'Courier New', monospace;
+    font-size: 0.78rem; color: var(--text2); min-height: 80px; max-height: 200px;
+    overflow-y: auto; margin-top: 14px;
+  }
+  .log-line { margin-bottom: 3px; }
+  .log-line.ok { color: var(--green); }
+  .log-line.err { color: var(--red); }
+  .log-line.info { color: var(--blue); }
+  .log-line.warn { color: var(--accent); }
+
+  /* GENERATED IDs */
+  .gen-preview {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 7px; padding: 12px; font-family: 'Courier New', monospace;
+    font-size: 0.78rem; color: var(--text3); margin-bottom: 14px;
+    display: none;
+  }
+  .gen-preview.show { display: block; }
+  .gen-preview span { color: var(--accent); }
+
+  /* ACTIONS GRID */
+  .actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .action-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px; cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .action-card:hover { border-color: var(--accent); }
+  .action-icon { font-size: 1.6rem; margin-bottom: 8px; }
+  .action-name { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .action-desc { font-size: 0.75rem; color: var(--text3); }
+
+  /* SERIES LIST (quick actions) */
+  .series-list-mini { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .series-mini-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 7px; padding: 9px 12px; font-size: 0.83rem;
+  }
+  .series-mini-cover { width: 28px; height: 38px; border-radius: 4px; object-fit: cover; background: var(--bg2); flex-shrink: 0; }
+  .series-mini-title { flex: 1; font-weight: 700; }
+  .series-mini-meta { font-size: 0.72rem; color: var(--text3); }
+
+  /* HASH TABLE */
+  .hash-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .hash-table th { text-align: left; color: var(--text3); padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  .hash-table td { padding: 7px 8px; border-bottom: 1px solid var(--bg3); vertical-align: middle; }
+  .hash-table tr:hover td { background: var(--surface2); }
+  .hash-mono { font-family: 'Courier New', monospace; color: var(--accent); }
+  .lock-pill { font-size: 0.68rem; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+  .lock-pill.free { background: rgba(92,224,160,0.12); color: var(--green); }
+  .lock-pill.locked { background: rgba(224,92,106,0.12); color: var(--red); }
+
+  /* PROGRESS */
+  .upload-progress {
+    background: var(--border); border-radius: 4px; height: 6px; margin-top: 10px; overflow: hidden; display: none;
+  }
+  .upload-progress.show { display: block; }
+  .upload-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-logo">✦ NovaShelves Admin</div>
+    <div class="topbar-sub">Static CMS Panel</div>
+  </div>
+  <div class="topbar-sep"></div>
+  <a href="index.html" class="topbar-link" target="_blank">View Site ↗</a>
+</div>
+
+<!-- GITHUB CONFIG -->
+<div class="config-bar">
+  <span class="config-label">GitHub:</span>
+  <input class="config-input wide" id="gh-owner" placeholder="username" title="GitHub username">
+  <span class="config-label">/</span>
+  <input class="config-input wide" id="gh-repo" placeholder="repo-name" title="Repository name">
+  <span class="config-label">Branch:</span>
+  <input class="config-input" id="gh-branch" placeholder="main" style="width:80px" title="Branch">
+  <span class="config-label">Token:</span>
+  <input class="config-input wide" id="gh-token" type="password" placeholder="ghp_..." title="Personal Access Token">
+  <button class="btn-sm" onclick="testGithub()">Test</button>
+  <button class="btn-sm primary" onclick="saveConfig()">Save</button>
+  <span class="config-status" id="gh-status"></span>
+</div>
+
+<div class="admin-layout">
+  <div class="sidebar">
+    <div class="tab-item active" data-tab="new-series"><span class="tab-icon">📚</span><span class="tab-label">New Series</span></div>
+    <div class="tab-item" data-tab="update-series"><span class="tab-icon">✏️</span><span class="tab-label">Update Series</span></div>
+    <div class="tab-item" data-tab="hashmap"><span class="tab-icon">🗺️</span><span class="tab-label">Hash Map</span></div>
+    <div class="tab-item" data-tab="quick-actions"><span class="tab-icon">⚡</span><span class="tab-label">Quick Actions</span></div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- NEW SERIES -->
+    <div class="tab-pane active" id="tab-new-series">
+      <div class="card">
+        <div class="card-title">📚 Add New Series</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Series Title *</label>
+            <input class="form-input" id="ns-title" placeholder="e.g. The Arcane Compiler">
+          </div>
+          <div class="form-group">
+            <label>Author</label>
+            <input class="form-input" id="ns-author" placeholder="e.g. Tanaka Ryu">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Series ID (auto-generated)</label>
+            <input class="form-input" id="ns-id" placeholder="the-arcane-compiler" style="font-family:monospace">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select class="form-select" id="ns-status">
+              <option>Ongoing</option>
+              <option>Completed</option>
+              <option>Hiatus</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Genres (comma-separated)</label>
+            <input class="form-input" id="ns-genres" placeholder="Fantasy, Isekai, Magic">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Synopsis</label>
+            <textarea class="form-textarea" id="ns-synopsis" rows="4" placeholder="Series description..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cover Image URL</label>
+            <input class="form-input" id="ns-cover" placeholder="https://... or upload below">
+          </div>
+          <div class="form-group">
+            <label>Initial Volume</label>
+            <input class="form-input" id="ns-vol" type="number" value="1" min="1">
+          </div>
+          <div class="form-group">
+            <label>Initial Chapter</label>
+            <input class="form-input" id="ns-ch" type="number" value="1" min="1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Chapter Title</label>
+            <input class="form-input" id="ns-chtitle" placeholder="e.g. Prologue">
+          </div>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="ns-locked"><span class="toggle-slider"></span></label>
+          <span class="toggle-label">Locked chapter (behind adwall)</span>
+        </div>
+
+        <div class="file-drop" id="ns-filedrop" onclick="document.getElementById('ns-file').click()">
+          <input type="file" id="ns-file" accept=".json,.txt" style="display:none" onchange="handleFileSelect(this,'ns-filedrop','ns-filename')">
+          <div class="file-drop-label">📄 Click or drag chapter JSON/TXT file here</div>
+          <div class="file-name" id="ns-filename"></div>
+        </div>
+
+        <div class="gen-preview show" id="ns-preview">Will generate: hash=<span id="ns-phash">—</span>, file=<span id="ns-pfile">—</span></div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-sm" onclick="generateNSPreview()">🔄 Generate IDs</button>
+          <button class="btn-sm primary" id="ns-submit" onclick="submitNewSeries()">🚀 Upload &amp; Publish</button>
+        </div>
+
+        <div class="upload-progress" id="ns-progress"><div class="upload-bar" id="ns-bar" style="width:0%"></div></div>
+        <div class="log-box" id="ns-log"></div>
+      </div>
+    </div>
+
+    <!-- UPDATE SERIES -->
+    <div class="tab-pane" id="tab-update-series">
+      <div class="card">
+        <div class="card-title">✏️ Update Existing Series</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Select Series *</label>
+            <select class="form-select" id="us-series" onchange="onSeriesSelect()">
+              <option value="">— Select series —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Volume</label>
+            <input class="form-input" id="us-vol" type="number" value="1" min="1">
+          </div>
+          <div class="form-group">
+            <label>Chapter</label>
+            <input class="form-input" id="us-ch" type="number" value="1" min="1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Chapter Title</label>
+            <input class="form-input" id="us-chtitle" placeholder="e.g. The Demon Awakens">
+          </div>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="us-locked"><span class="toggle-slider"></span></label>
+          <span class="toggle-label">Locked chapter</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Previous Chapter Hash (optional)</label>
+            <input class="form-input" id="us-prev" placeholder="Leave blank to auto-detect" style="font-family:monospace;font-size:0.8rem">
+          </div>
+        </div>
+
+        <div class="file-drop" id="us-filedrop" onclick="document.getElementById('us-file').click()">
+          <input type="file" id="us-file" accept=".json,.txt" style="display:none" onchange="handleFileSelect(this,'us-filedrop','us-filename')">
+          <div class="file-drop-label">📄 Click or drag chapter JSON/TXT file here</div>
+          <div class="file-name" id="us-filename"></div>
+        </div>
+
+        <div class="gen-preview show" id="us-preview">Will generate: hash=<span id="us-phash">—</span>, file=<span id="us-pfile">—</span></div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-sm" onclick="generateUSPreview()">🔄 Generate IDs</button>
+          <button class="btn-sm primary" id="us-submit" onclick="submitUpdateSeries()">🚀 Upload &amp; Publish</button>
+        </div>
+
+        <div class="upload-progress" id="us-progress"><div class="upload-bar" id="us-bar" style="width:0%"></div></div>
+        <div class="log-box" id="us-log"></div>
+      </div>
+    </div>
+
+    <!-- HASH MAP VIEWER -->
+    <div class="tab-pane" id="tab-hashmap">
+      <div class="card">
+        <div class="card-title">🗺️ Hash Map Viewer</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <button class="btn-sm primary" onclick="loadHashmap()">🔄 Refresh</button>
+          <button class="btn-sm danger" onclick="exportHashmap()">💾 Export JSON</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="hash-table">
+            <thead><tr><th>Hash</th><th>Series</th><th>Vol</th><th>Ch</th><th>File</th><th>Status</th><th>Prev</th><th>Next</th></tr></thead>
+            <tbody id="hash-tbody"><tr><td colspan="8" style="color:var(--text3);padding:20px">Click Refresh to load</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="tab-pane" id="tab-quick-actions">
+      <div class="card">
+        <div class="card-title">⚡ Quick Actions</div>
+        <div class="actions-grid">
+          <div class="action-card" onclick="quickRebuildUpdate()">
+            <div class="action-icon">📋</div>
+            <div class="action-name">Rebuild Update Feed</div>
+            <div class="action-desc">Regenerate update.json from series metadata</div>
+          </div>
+          <div class="action-card" onclick="quickFixMetadata()">
+            <div class="action-icon">🔧</div>
+            <div class="action-name">Sync Metadata</div>
+            <div class="action-desc">Fix latest_chapter/volume in series.json</div>
+          </div>
+          <div class="action-card" onclick="quickExportAll()">
+            <div class="action-icon">📦</div>
+            <div class="action-name">Export All JSONs</div>
+            <div class="action-desc">Download all data files as ZIP</div>
+          </div>
+          <div class="action-card" onclick="loadAllSeries()">
+            <div class="action-icon">📚</div>
+            <div class="action-name">View All Series</div>
+            <div class="action-desc">List all series in database</div>
+          </div>
+        </div>
+        <div class="log-box" id="qa-log" style="margin-top:16px"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📚 Current Series Database</div>
+        <div class="series-list-mini" id="qa-series-list">
+          <div style="color:var(--text3);font-size:0.82rem;padding:10px">Click "View All Series" to load.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ========== CONFIG ==========
+function saveConfig() {
+  const cfg = {
+    owner: document.getElementById('gh-owner').value.trim(),
+    repo: document.getElementById('gh-repo').value.trim(),
+    branch: document.getElementById('gh-branch').value.trim() || 'main',
+    token: document.getElementById('gh-token').value.trim()
+  };
+  localStorage.setItem('ns_gh_config', JSON.stringify(cfg));
+  document.getElementById('gh-status').textContent = '✓ Saved';
+  document.getElementById('gh-status').className = 'config-status ok';
+}
+
+function loadConfig() {
+  const saved = localStorage.getItem('ns_gh_config');
+  if (!saved) return null;
+  const cfg = JSON.parse(saved);
+  document.getElementById('gh-owner').value = cfg.owner || '';
+  document.getElementById('gh-repo').value = cfg.repo || '';
+  document.getElementById('gh-branch').value = cfg.branch || 'main';
+  document.getElementById('gh-token').value = cfg.token || '';
+  return cfg;
+}
+
+function getConfig() {
+  const cfg = JSON.parse(localStorage.getItem('ns_gh_config') || '{}');
+  if (!cfg.owner || !cfg.repo || !cfg.token) {
+    alert('Please fill in GitHub owner, repo, and token first, then click Save.');
+    return null;
+  }
+  cfg.branch = cfg.branch || 'main';
+  return cfg;
+}
+
+async function testGithub() {
+  const cfg = getConfig(); if (!cfg) return;
+  const status = document.getElementById('gh-status');
+  status.textContent = 'Testing...'; status.className = 'config-status';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}`, {
+      headers: { Authorization: `token ${cfg.token}` }
+    });
+    if (res.ok) { status.textContent = '✓ Connected'; status.className = 'config-status ok'; }
+    else { status.textContent = `✗ ${res.status}`; status.className = 'config-status err'; }
+  } catch(e) { status.textContent = '✗ Network error'; status.className = 'config-status err'; }
+}
+
+// ========== GITHUB API ==========
+async function ghGetFile(cfg, path) {
+  const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}?ref=${cfg.branch}`, {
+    headers: { Authorization: `token ${cfg.token}` }
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GitHub GET ${path}: ${res.status}`);
+  return res.json();
+}
+
+async function ghPutFile(cfg, path, content, message, sha) {
+  const body = {
+    message,
+    content: btoa(unescape(encodeURIComponent(content))),
+    branch: cfg.branch
+  };
+  if (sha) body.sha = sha;
+  const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: { Authorization: `token ${cfg.token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`GitHub PUT ${path}: ${res.status} — ${err.message || ''}`);
+  }
+  return res.json();
+}
+
+async function ghGetJSON(cfg, path) {
+  const file = await ghGetFile(cfg, path);
+  if (!file) return { data: null, sha: null };
+  const data = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g,'')))));
+  return { data, sha: file.sha };
+}
+
+// ========== UTILITIES ==========
+function genHash(len = 9) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({length: len}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function genFilename(len = 5) {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({length: len}, () => chars[Math.floor(Math.random() * chars.length)]).join('') + '.json';
+}
+
+function slugify(str) {
+  return str.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function log(boxId, msg, type = '') {
+  const box = document.getElementById(boxId);
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearLog(boxId) { document.getElementById(boxId).innerHTML = ''; }
+function setProgress(barId, progressId, pct) {
+  document.getElementById(progressId).classList.add('show');
+  document.getElementById(barId).style.width = pct + '%';
+}
+
+let nsHash = '', nsFile = '';
+let usHash = '', usFile = '';
+
+function generateNSPreview() {
+  nsHash = genHash(); nsFile = genFilename();
+  document.getElementById('ns-phash').textContent = nsHash;
+  document.getElementById('ns-pfile').textContent = nsFile;
+  document.getElementById('ns-preview').classList.add('show');
+}
+
+function generateUSPreview() {
+  usHash = genHash(); usFile = genFilename();
+  document.getElementById('us-phash').textContent = usHash;
+  document.getElementById('us-pfile').textContent = usFile;
+  document.getElementById('us-preview').classList.add('show');
+}
+
+generateNSPreview();
+generateUSPreview();
+
+// Auto-generate ID from title
+document.getElementById('ns-title').addEventListener('input', e => {
+  document.getElementById('ns-id').value = slugify(e.target.value);
+});
+
+// Drag-drop support
+function handleFileSelect(input, dropId, nameId) {
+  if (input.files[0]) document.getElementById(nameId).textContent = '✓ ' + input.files[0].name;
+}
+['ns-filedrop','us-filedrop'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', e => {
+    e.preventDefault(); el.classList.remove('dragover');
+    const fileInput = el.querySelector('input[type=file]');
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change'));
+  });
+});
+
+// Read file content
+function readFile(input) {
+  return new Promise((res, rej) => {
+    const f = input.files[0];
+    if (!f) { rej(new Error('No file selected')); return; }
+    const reader = new FileReader();
+    reader.onload = e => res(e.target.result);
+    reader.onerror = () => rej(new Error('File read error'));
+    reader.readAsText(f);
+  });
+}
+
+// Parse chapter content: supports JSON or plain TXT
+function parseChapterContent(raw, title, vol, chNum, seriesId) {
+  raw = raw.trim();
+  if (raw.startsWith('{')) {
+    const parsed = JSON.parse(raw);
+    parsed.series = parsed.series || seriesId;
+    return JSON.stringify(parsed, null, 2);
+  }
+  // Plain text: split on blank lines or newlines
+  const paragraphs = raw.split(/\n\n+/).map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean);
+  const obj = { title, volume: parseInt(vol), chapter: parseInt(chNum), series: seriesId, content: paragraphs };
+  return JSON.stringify(obj, null, 2);
+}
+
+// ========== NEW SERIES ==========
+async function submitNewSeries() {
+  const cfg = getConfig(); if (!cfg) return;
+  const title = document.getElementById('ns-title').value.trim();
+  const id = document.getElementById('ns-id').value.trim() || slugify(title);
+  const author = document.getElementById('ns-author').value.trim();
+  const status = document.getElementById('ns-status').value;
+  const genres = document.getElementById('ns-genres').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const synopsis = document.getElementById('ns-synopsis').value.trim();
+  const cover = document.getElementById('ns-cover').value.trim() || `https://picsum.photos/seed/${id}/300/420`;
+  const vol = parseInt(document.getElementById('ns-vol').value) || 1;
+  const chNum = parseInt(document.getElementById('ns-ch').value) || 1;
+  const chTitle = document.getElementById('ns-chtitle').value.trim() || `Volume ${vol} Chapter ${chNum}`;
+  const locked = document.getElementById('ns-locked').checked;
+  const fileInput = document.getElementById('ns-file');
+
+  if (!title) { alert('Please enter a series title.'); return; }
+  if (!fileInput.files[0]) { alert('Please select a chapter file.'); return; }
+  if (!nsHash) generateNSPreview();
+
+  clearLog('ns-log');
+  setProgress('ns-bar', 'ns-progress', 5);
+  log('ns-log', 'Starting upload...', 'info');
+  document.getElementById('ns-submit').disabled = true;
+
+  try {
+    // 1. Parse chapter file
+    const raw = await readFile(fileInput);
+    const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, id);
+    log('ns-log', 'Chapter file parsed ✓', 'ok');
+    setProgress('ns-bar', 'ns-progress', 15);
+
+    // 2. Upload chapter JSON
+    const chPath = `data/chapters/${nsFile}`;
+    await ghPutFile(cfg, chPath, chapterContent, `Add ${id} ch${chNum}`);
+    log('ns-log', `Chapter uploaded → ${chPath} ✓`, 'ok');
+    setProgress('ns-bar', 'ns-progress', 35);
+
+    // 3. Update series.json
+    let { data: seriesArr, sha: seriesSha } = await ghGetJSON(cfg, 'data/series.json');
+    if (!seriesArr) seriesArr = [];
+    if (seriesArr.find(s => s.id === id)) throw new Error(`Series "${id}" already exists. Use Update tab.`);
+    seriesArr.push({ id, title, cover, genres, synopsis, latest_volume: vol, latest_chapter: chNum, status, author, rating: 0 });
+    await ghPutFile(cfg, 'data/series.json', JSON.stringify(seriesArr, null, 2), `Add series: ${title}`, seriesSha);
+    log('ns-log', 'series.json updated ✓', 'ok');
+    setProgress('ns-bar', 'ns-progress', 55);
+
+    // 4. Update hashmap.json
+    let { data: hashmap, sha: hashmapSha } = await ghGetJSON(cfg, 'data/hashmap.json');
+    if (!hashmap) hashmap = {};
+    hashmap[nsHash] = { series: id, volume: vol, chapter: chNum, file: nsFile, locked, prev: null, next: null };
+    await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Add hash for ${id} ch${chNum}`, hashmapSha);
+    log('ns-log', 'hashmap.json updated ✓', 'ok');
+    setProgress('ns-bar', 'ns-progress', 70);
+
+    // 5. Create/update chapter index
+    const indexPath = `data/chapters/${id}-index.json`;
+    let { data: index, sha: indexSha } = await ghGetJSON(cfg, indexPath);
+    if (!index) index = { id, chapters: [] };
+    index.chapters.push({ volume: vol, chapter: chNum, title: chTitle, hash: nsHash, locked });
+    await ghPutFile(cfg, indexPath, JSON.stringify(index, null, 2), `Add chapter index for ${id}`, indexSha);
+    log('ns-log', 'Chapter index updated ✓', 'ok');
+    setProgress('ns-bar', 'ns-progress', 85);
+
+    // 6. Update update.json
+    let { data: updates, sha: updatesSha } = await ghGetJSON(cfg, 'data/update.json');
+    if (!updates) updates = [];
+    updates.unshift({ series_id: id, title, cover, reason: `Volume ${vol} Chapter ${chNum} added`, url: `/series.html?id=${id}`, timestamp: new Date().toISOString() });
+    if (updates.length > 20) updates = updates.slice(0, 20);
+    await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), `Update feed: ${title}`, updatesSha);
+    log('ns-log', 'update.json updated ✓', 'ok');
+    setProgress('ns-bar', 'ns-progress', 100);
+
+    log('ns-log', `✅ Done! Series "${title}" published. Chapter URL: chapter.html?h=${nsHash}`, 'ok');
+    generateNSPreview(); // reset IDs for next use
+
+  } catch(e) {
+    log('ns-log', `❌ Error: ${e.message}`, 'err');
+    console.error(e);
+  } finally {
+    document.getElementById('ns-submit').disabled = false;
+  }
+}
+
+// ========== UPDATE SERIES ==========
+let cachedSeries = null;
+
+async function loadSeriesDropdown() {
+  const cfg = getConfig(); if (!cfg) return;
+  try {
+    const { data } = await ghGetJSON(cfg, 'data/series.json');
+    cachedSeries = data;
+    const sel = document.getElementById('us-series');
+    sel.innerHTML = '<option value="">— Select series —</option>';
+    (data || []).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id; opt.textContent = `${s.title} (Vol.${s.latest_volume} Ch.${s.latest_chapter})`;
+      sel.appendChild(opt);
+    });
+  } catch(e) { alert('Failed to load series: ' + e.message); }
+}
+
+function onSeriesSelect() {
+  const id = document.getElementById('us-series').value;
+  if (!id || !cachedSeries) return;
+  const s = cachedSeries.find(x => x.id === id);
+  if (s) {
+    document.getElementById('us-vol').value = s.latest_volume;
+    document.getElementById('us-ch').value = (s.latest_chapter || 0) + 1;
+  }
+}
+
+async function submitUpdateSeries() {
+  const cfg = getConfig(); if (!cfg) return;
+  const seriesId = document.getElementById('us-series').value;
+  if (!seriesId) { alert('Please select a series.'); return; }
+  const vol = parseInt(document.getElementById('us-vol').value) || 1;
+  const chNum = parseInt(document.getElementById('us-ch').value) || 1;
+  const chTitle = document.getElementById('us-chtitle').value.trim() || `Volume ${vol} Chapter ${chNum}`;
+  const locked = document.getElementById('us-locked').checked;
+  const prevHash = document.getElementById('us-prev').value.trim() || null;
+  const fileInput = document.getElementById('us-file');
+
+  if (!fileInput.files[0]) { alert('Please select a chapter file.'); return; }
+  if (!usHash) generateUSPreview();
+
+  clearLog('us-log');
+  setProgress('us-bar', 'us-progress', 5);
+  log('us-log', 'Starting update...', 'info');
+  document.getElementById('us-submit').disabled = true;
+
+  try {
+    const series = cachedSeries?.find(s => s.id === seriesId);
+    const seriesTitle = series?.title || seriesId;
+    const seriesCover = series?.cover || '';
+
+    // 1. Parse & upload chapter
+    const raw = await readFile(fileInput);
+    const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId);
+    const chPath = `data/chapters/${usFile}`;
+    await ghPutFile(cfg, chPath, chapterContent, `Add ${seriesId} ch${chNum}`);
+    log('us-log', `Chapter uploaded → ${usFile} ✓`, 'ok');
+    setProgress('us-bar', 'us-progress', 25);
+
+    // 2. Update hashmap — set next on previous entry
+    let { data: hashmap, sha: hashmapSha } = await ghGetJSON(cfg, 'data/hashmap.json');
+    if (!hashmap) hashmap = {};
+
+    // Auto-find prev hash if not provided
+    let actualPrev = prevHash;
+    if (!actualPrev) {
+      // Find last chapter of this series in hashmap
+      const seriesEntries = Object.entries(hashmap).filter(([h, v]) => v.series === seriesId);
+      if (seriesEntries.length > 0) {
+        seriesEntries.sort((a,b) => (a[1].chapter||0) - (b[1].chapter||0));
+        actualPrev = seriesEntries[seriesEntries.length - 1][0];
+      }
+    }
+
+    hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNum, file: usFile, locked, prev: actualPrev, next: null };
+    if (actualPrev && hashmap[actualPrev]) { hashmap[actualPrev].next = usHash; }
+    await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Update hash: ${seriesId} ch${chNum}`, hashmapSha);
+    log('us-log', 'hashmap.json updated ✓', 'ok');
+    setProgress('us-bar', 'us-progress', 50);
+
+    // 3. Update chapter index
+    const indexPath = `data/chapters/${seriesId}-index.json`;
+    let { data: index, sha: indexSha } = await ghGetJSON(cfg, indexPath);
+    if (!index) index = { id: seriesId, chapters: [] };
+    index.chapters.push({ volume: vol, chapter: chNum, title: chTitle, hash: usHash, locked });
+    await ghPutFile(cfg, indexPath, JSON.stringify(index, null, 2), `Update chapter index: ${seriesId}`, indexSha);
+    log('us-log', 'Chapter index updated ✓', 'ok');
+    setProgress('us-bar', 'us-progress', 70);
+
+    // 4. Update series.json latest chapter/volume
+    let { data: seriesArr, sha: seriesSha } = await ghGetJSON(cfg, 'data/series.json');
+    const sIdx = seriesArr.findIndex(s => s.id === seriesId);
+    if (sIdx !== -1) {
+      if (vol > seriesArr[sIdx].latest_volume || (vol === seriesArr[sIdx].latest_volume && chNum > seriesArr[sIdx].latest_chapter)) {
+        seriesArr[sIdx].latest_volume = vol;
+        seriesArr[sIdx].latest_chapter = chNum;
+      }
+      await ghPutFile(cfg, 'data/series.json', JSON.stringify(seriesArr, null, 2), `Update metadata: ${seriesId}`, seriesSha);
+      log('us-log', 'series.json updated ✓', 'ok');
+    }
+    setProgress('us-bar', 'us-progress', 85);
+
+    // 5. Update update.json
+    let { data: updates, sha: updatesSha } = await ghGetJSON(cfg, 'data/update.json');
+    if (!updates) updates = [];
+    updates.unshift({ series_id: seriesId, title: seriesTitle, cover: seriesCover, reason: `Volume ${vol} Chapter ${chNum} added`, url: `/series.html?id=${seriesId}`, timestamp: new Date().toISOString() });
+    if (updates.length > 20) updates = updates.slice(0, 20);
+    await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), `Update feed: ${seriesTitle}`, updatesSha);
+    log('us-log', 'update.json updated ✓', 'ok');
+    setProgress('us-bar', 'us-progress', 100);
+
+    log('us-log', `✅ Done! Chapter URL: chapter.html?h=${usHash}`, 'ok');
+    if (actualPrev) log('us-log', `Linked from previous: ${actualPrev}`, 'info');
+    generateUSPreview();
+
+  } catch(e) {
+    log('us-log', `❌ Error: ${e.message}`, 'err');
+    console.error(e);
+  } finally {
+    document.getElementById('us-submit').disabled = false;
+  }
+}
+
+// ========== HASHMAP VIEWER ==========
+async function loadHashmap() {
+  const cfg = getConfig(); if (!cfg) return;
+  const tbody = document.getElementById('hash-tbody');
+  tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text3);padding:10px">Loading...</td></tr>';
+  try {
+    const { data } = await ghGetJSON(cfg, 'data/hashmap.json');
+    if (!data || !Object.keys(data).length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text3);padding:10px">No entries found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = Object.entries(data).map(([hash, v]) => `
+      <tr>
+        <td class="hash-mono">${hash}</td>
+        <td>${v.series}</td>
+        <td>${v.volume}</td>
+        <td>${v.chapter}</td>
+        <td class="hash-mono" style="color:var(--text3);font-size:0.72rem">${v.file}</td>
+        <td><span class="lock-pill ${v.locked?'locked':'free'}">${v.locked?'Locked':'Free'}</span></td>
+        <td class="hash-mono" style="font-size:0.7rem;color:var(--text3)">${v.prev||'—'}</td>
+        <td class="hash-mono" style="font-size:0.7rem;color:var(--text3)">${v.next||'—'}</td>
+      </tr>
+    `).join('');
+  } catch(e) { tbody.innerHTML = `<tr><td colspan="8" style="color:var(--red)">Error: ${e.message}</td></tr>`; }
+}
+
+function exportHashmap() {
+  const cfg = getConfig(); if(!cfg) return;
+  ghGetJSON(cfg, 'data/hashmap.json').then(({data}) => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+    a.download = 'hashmap.json'; a.click();
+  });
+}
+
+// ========== QUICK ACTIONS ==========
+async function loadAllSeries() {
+  const cfg = getConfig(); if (!cfg) return;
+  const list = document.getElementById('qa-series-list');
+  list.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;padding:10px">Loading...</div>';
+  try {
+    const { data } = await ghGetJSON(cfg, 'data/series.json');
+    if (!data || !data.length) { list.innerHTML = '<div style="color:var(--text3);font-size:0.82rem;padding:10px">No series found.</div>'; return; }
+    cachedSeries = data;
+    list.innerHTML = data.map(s => `
+      <div class="series-mini-item">
+        <img class="series-mini-cover" src="${s.cover}" alt="${s.title}" onerror="this.style.background='#1a1a28'">
+        <div style="flex:1;min-width:0">
+          <div class="series-mini-title">${s.title}</div>
+          <div class="series-mini-meta">${s.id} &bull; Vol.${s.latest_volume} Ch.${s.latest_chapter} &bull; ${s.status||'?'}</div>
+        </div>
+        <a href="series.html?id=${s.id}" target="_blank" style="font-size:0.75rem;color:var(--accent);text-decoration:none">View ↗</a>
+      </div>
+    `).join('');
+    log('qa-log', `Loaded ${data.length} series.`, 'ok');
+  } catch(e) { log('qa-log', '❌ ' + e.message, 'err'); }
+}
+
+async function quickRebuildUpdate() {
+  const cfg = getConfig(); if (!cfg) return;
+  clearLog('qa-log'); log('qa-log', 'Rebuilding update.json...', 'info');
+  try {
+    const { data: series, sha: seriesSha } = await ghGetJSON(cfg, 'data/series.json');
+    const { data: hashmap } = await ghGetJSON(cfg, 'data/hashmap.json');
+    const updates = (series || []).map(s => ({
+      series_id: s.id, title: s.title, cover: s.cover,
+      reason: `Volume ${s.latest_volume} Chapter ${s.latest_chapter}`,
+      url: `/series.html?id=${s.id}`, timestamp: new Date().toISOString()
+    }));
+    const { sha: updSha } = await ghGetJSON(cfg, 'data/update.json');
+    await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), 'Rebuild update feed', updSha);
+    log('qa-log', `✅ Rebuilt update.json with ${updates.length} entries.`, 'ok');
+  } catch(e) { log('qa-log', '❌ ' + e.message, 'err'); }
+}
+
+async function quickFixMetadata() {
+  const cfg = getConfig(); if (!cfg) return;
+  clearLog('qa-log'); log('qa-log', 'Syncing metadata...', 'info');
+  try {
+    const { data: hashmap } = await ghGetJSON(cfg, 'data/hashmap.json');
+    const { data: series, sha: seriesSha } = await ghGetJSON(cfg, 'data/series.json');
+    let changed = 0;
+    (series || []).forEach(s => {
+      const entries = Object.values(hashmap || {}).filter(v => v.series === s.id);
+      if (!entries.length) return;
+      const latest = entries.sort((a,b) => b.volume - a.volume || b.chapter - a.chapter)[0];
+      if (latest.volume !== s.latest_volume || latest.chapter !== s.latest_chapter) {
+        s.latest_volume = latest.volume; s.latest_chapter = latest.chapter; changed++;
+      }
+    });
+    if (changed > 0) {
+      await ghPutFile(cfg, 'data/series.json', JSON.stringify(series, null, 2), 'Fix metadata', seriesSha);
+      log('qa-log', `✅ Updated metadata for ${changed} series.`, 'ok');
+    } else {
+      log('qa-log', 'All metadata already up to date.', 'warn');
+    }
+  } catch(e) { log('qa-log', '❌ ' + e.message, 'err'); }
+}
+
+async function quickExportAll() {
+  const cfg = getConfig(); if (!cfg) return;
+  log('qa-log', 'Downloading data files...', 'info');
+  const files = ['data/series.json', 'data/update.json', 'data/hashmap.json'];
+  for (const path of files) {
+    try {
+      const { data } = await ghGetJSON(cfg, path);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+      a.download = path.split('/').pop(); a.click();
+      log('qa-log', `Downloaded ${path}`, 'ok');
+    } catch(e) { log('qa-log', `Failed ${path}: ${e.message}`, 'err'); }
+  }
+}
+
+// ========== TAB SWITCHING ==========
+document.querySelectorAll('.tab-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('tab-' + item.dataset.tab).classList.add('active');
+    if (item.dataset.tab === 'update-series' && document.getElementById('us-series').options.length <= 1) loadSeriesDropdown();
+    if (item.dataset.tab === 'hashmap') loadHashmap();
+  });
+});
+
+// ========== INIT ==========
+loadConfig();
+</script>
+</body>
+</html>

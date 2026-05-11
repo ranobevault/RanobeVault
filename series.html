@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Series — NovaShelves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d12; --bg2: #13131c; --bg3: #1a1a28;
+    --surface: #1e1e2e; --surface2: #252538;
+    --border: #2e2e45;
+    --accent: #c8a96e; --accent2: #e8c98e;
+    --text: #e8e6f0; --text2: #a09dbb; --text3: #6b6884;
+    --red: #e05c6a; --green: #5ce0a0;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Lato', sans-serif; font-weight: 300; min-height: 100vh; }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,13,18,0.92); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px; display: flex; align-items: center; gap: 12px; height: 56px;
+  }
+  .nav-back {
+    background: none; border: 1px solid var(--border);
+    color: var(--text2); border-radius: 8px; padding: 6px 12px;
+    font-family: 'Lato', sans-serif; font-size: 0.85rem;
+    cursor: pointer; text-decoration: none; transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-back:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-logo { font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem; color: var(--accent); text-decoration: none; }
+
+  /* HERO */
+  .series-hero {
+    background: linear-gradient(to bottom, #1a1428, var(--bg));
+    border-bottom: 1px solid var(--border);
+    padding: 28px 20px;
+  }
+  .hero-inner {
+    max-width: 900px; margin: 0 auto;
+    display: flex; gap: 20px; align-items: flex-start;
+  }
+  .cover-wrap { flex-shrink: 0; }
+  .series-cover {
+    width: 110px; border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    display: block;
+  }
+  @media (min-width: 480px) { .series-cover { width: 140px; } }
+  .series-meta { flex: 1; min-width: 0; }
+  .series-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.1rem, 4vw, 1.7rem);
+    color: var(--text); font-weight: 700;
+    line-height: 1.25; margin-bottom: 6px;
+  }
+  .series-author { font-size: 0.85rem; color: var(--text3); margin-bottom: 10px; }
+  .series-genres { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .genre-tag {
+    background: rgba(200,169,110,0.12); color: var(--accent);
+    border: 1px solid rgba(200,169,110,0.25); border-radius: 20px;
+    padding: 3px 10px; font-size: 0.75rem;
+  }
+  .series-stats { display: flex; gap: 16px; margin-bottom: 14px; }
+  .stat { font-size: 0.8rem; color: var(--text3); }
+  .stat strong { color: var(--text); font-weight: 700; }
+  .status-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700; margin-bottom: 14px;
+  }
+  .status-badge.ongoing { background: rgba(92,224,160,0.15); color: var(--green); border: 1px solid rgba(92,224,160,0.3); }
+  .synopsis {
+    font-size: 0.88rem; color: var(--text2); line-height: 1.65;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+    cursor: pointer;
+  }
+  .synopsis.expanded { -webkit-line-clamp: unset; }
+  .synopsis-toggle { font-size: 0.78rem; color: var(--accent); cursor: pointer; margin-top: 4px; }
+
+  /* CHAPTER LIST */
+  .chapters-section { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; }
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif; font-size: 0.95rem; font-weight: 600;
+    color: var(--accent); letter-spacing: 0.08em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::before { content: ''; display: block; width: 3px; height: 14px; background: var(--accent); border-radius: 2px; }
+  .vol-filter { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; scrollbar-width: none; }
+  .vol-filter::-webkit-scrollbar { display: none; }
+  .vol-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text2); border-radius: 20px; padding: 4px 14px;
+    font-size: 0.8rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  }
+  .vol-btn.active, .vol-btn:hover { background: var(--accent); color: #1a1410; border-color: var(--accent); font-weight: 700; }
+
+  .chapter-list { display: flex; flex-direction: column; gap: 6px; }
+  .chapter-item {
+    display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
+    text-decoration: none; transition: all 0.18s; cursor: pointer;
+    gap: 12px;
+  }
+  .chapter-item:hover { border-color: var(--accent); transform: translateX(2px); }
+  .chapter-item.locked { cursor: default; }
+  .ch-num { font-size: 0.75rem; color: var(--text3); min-width: 50px; flex-shrink: 0; }
+  .ch-title { flex: 1; font-size: 0.88rem; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ch-badge {
+    flex-shrink: 0; font-size: 0.7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 4px;
+  }
+  .ch-badge.free { background: rgba(92,224,160,0.12); color: var(--green); }
+  .ch-badge.locked { background: rgba(224,92,106,0.12); color: var(--red); }
+  .ch-lock-icon { flex-shrink: 0; color: var(--red); font-size: 0.75rem; }
+
+  .loading { text-align: center; padding: 40px; color: var(--text3); font-size: 0.9rem; }
+  .dot-anim::after { content: ''; animation: dots 1.2s infinite; }
+  @keyframes dots { 0%{content:''} 33%{content:'.'} 66%{content:'..'} 100%{content:'...'} }
+
+  /* CONTINUE READING BANNER */
+  #continue-banner {
+    display: none;
+    background: rgba(200,169,110,0.1); border: 1px solid rgba(200,169,110,0.3);
+    border-radius: var(--radius); padding: 12px 16px;
+    margin-bottom: 16px; cursor: pointer;
+    text-decoration: none; color: var(--text);
+    transition: background 0.2s;
+  }
+  #continue-banner:hover { background: rgba(200,169,110,0.18); }
+  #continue-banner.show { display: block; }
+  .cont-label { font-size: 0.72rem; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+  .cont-title { font-size: 0.88rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    Back
+  </a>
+  <a href="index.html" class="nav-logo">✦ NovaShelves</a>
+</nav>
+
+<div class="series-hero">
+  <div class="hero-inner">
+    <div class="cover-wrap">
+      <img id="series-cover" class="series-cover" src="" alt="Cover">
+    </div>
+    <div class="series-meta">
+      <h1 class="series-title" id="series-title">Loading<span class="dot-anim"></span></h1>
+      <div class="series-author" id="series-author"></div>
+      <div class="status-badge ongoing" id="series-status">Ongoing</div>
+      <div class="series-genres" id="series-genres"></div>
+      <div class="series-stats" id="series-stats"></div>
+      <p class="synopsis" id="synopsis"></p>
+      <div class="synopsis-toggle" id="synopsis-toggle" style="display:none">Read more ▾</div>
+    </div>
+  </div>
+</div>
+
+<div class="chapters-section">
+  <a id="continue-banner" href="#">
+    <div class="cont-label">▶ Continue Reading</div>
+    <div class="cont-title" id="cont-title"></div>
+  </a>
+  <div class="section-head">
+    <span class="section-title">Chapters</span>
+    <span id="ch-count" style="font-size:0.8rem;color:var(--text3)"></span>
+  </div>
+  <div class="vol-filter" id="vol-filter"></div>
+  <div class="chapter-list" id="chapter-list">
+    <div class="loading dot-anim">Loading</div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const seriesId = params.get('id');
+let allChapters = [];
+let activeVol = 'all';
+
+if (!seriesId) { location.href = 'index.html'; }
+
+async function init() {
+  try {
+    const [seriesRes, chaptersRes] = await Promise.all([
+      fetch('data/series.json'),
+      fetch(`data/chapters/${seriesId}-index.json`).catch(() => null)
+    ]);
+    const allSeries = await seriesRes.json();
+    const series = allSeries.find(s => s.id === seriesId);
+    if (!series) { document.getElementById('series-title').textContent = 'Series not found'; return; }
+
+    document.title = `${series.title} — NovaShelves`;
+    document.getElementById('series-cover').src = series.cover;
+    document.getElementById('series-cover').alt = series.title;
+    document.getElementById('series-title').textContent = series.title;
+    document.getElementById('series-author').textContent = series.author ? `by ${series.author}` : '';
+    document.getElementById('series-status').textContent = series.status || 'Ongoing';
+
+    const genreEl = document.getElementById('series-genres');
+    (series.genres||[]).forEach(g => {
+      const span = document.createElement('span');
+      span.className = 'genre-tag'; span.textContent = g;
+      genreEl.appendChild(span);
+    });
+
+    document.getElementById('series-stats').innerHTML = `
+      <div class="stat">Vol. <strong>${series.latest_volume}</strong></div>
+      <div class="stat">Ch. <strong>${series.latest_chapter}</strong></div>
+      ${series.rating ? `<div class="stat">⭐ <strong>${series.rating}</strong></div>` : ''}
+    `;
+
+    const synEl = document.getElementById('synopsis');
+    synEl.textContent = series.synopsis || '';
+    const toggle = document.getElementById('synopsis-toggle');
+    if (series.synopsis && series.synopsis.length > 180) {
+      toggle.style.display = 'block';
+      toggle.onclick = () => {
+        synEl.classList.toggle('expanded');
+        toggle.textContent = synEl.classList.contains('expanded') ? 'Show less ▴' : 'Read more ▾';
+      };
+    }
+
+    if (chaptersRes && chaptersRes.ok) {
+      const chData = await chaptersRes.json();
+      allChapters = chData.chapters || [];
+      buildVolumeFilter();
+      renderChapters(allChapters);
+      checkContinue(allChapters);
+    } else {
+      document.getElementById('chapter-list').innerHTML = '<div class="loading">No chapters available yet.</div>';
+    }
+  } catch(e) {
+    document.getElementById('series-title').textContent = 'Error loading series';
+    console.error(e);
+  }
+}
+
+function buildVolumeFilter() {
+  const vols = [...new Set(allChapters.map(c => c.volume))].sort((a,b)=>a-b);
+  if (vols.length <= 1) return;
+  const bar = document.getElementById('vol-filter');
+  const allBtn = document.createElement('span');
+  allBtn.className = 'vol-btn active'; allBtn.textContent = 'All';
+  allBtn.onclick = () => { activeVol = 'all'; setActive(allBtn); renderChapters(allChapters); };
+  bar.appendChild(allBtn);
+  vols.forEach(v => {
+    const btn = document.createElement('span');
+    btn.className = 'vol-btn'; btn.textContent = `Volume ${v}`;
+    btn.onclick = () => { activeVol = v; setActive(btn); renderChapters(allChapters.filter(c => c.volume === v)); };
+    bar.appendChild(btn);
+  });
+}
+
+function setActive(el) {
+  document.querySelectorAll('.vol-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function renderChapters(chapters) {
+  const list = document.getElementById('chapter-list');
+  document.getElementById('ch-count').textContent = `${chapters.length} chapter${chapters.length!==1?'s':''}`;
+  if (!chapters.length) { list.innerHTML = '<div class="loading">No chapters found.</div>'; return; }
+  list.innerHTML = chapters.map(ch => {
+    if (ch.locked) {
+      return `<div class="chapter-item locked" onclick="handleLocked('${ch.hash}','${ch.title}')">
+        <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
+        <span class="ch-title">${ch.title}</span>
+        <span class="ch-badge locked">🔒 Locked</span>
+      </div>`;
+    }
+    return `<a class="chapter-item" href="chapter.html?h=${ch.hash}">
+      <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
+      <span class="ch-title">${ch.title}</span>
+      <span class="ch-badge free">Free</span>
+    </a>`;
+  }).join('');
+}
+
+function handleLocked(hash, title) {
+  // In production: redirect to adwall. Here: show alert.
+  if (confirm(`"${title}" is locked.\n\nGo to unlock page? (In production, this would redirect to your adwall with:\n?next=chapter.html?h=${hash})`)) {
+    // window.location.href = `https://your-adwall.com/?next=${encodeURIComponent('chapter.html?h='+hash)}`;
+    alert('Adwall URL would go here. Configure in series.html handleLocked().');
+  }
+}
+
+function checkContinue(chapters) {
+  const saved = localStorage.getItem(`continue_${seriesId}`);
+  if (!saved) return;
+  const { hash, title } = JSON.parse(saved);
+  const banner = document.getElementById('continue-banner');
+  document.getElementById('cont-title').textContent = title;
+  banner.href = `chapter.html?h=${hash}`;
+  banner.classList.add('show');
+}
+
+init();
+</script>
+</body>
+</html>

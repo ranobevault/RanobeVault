@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reading — NovaShelves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d12; --bg2: #13131c;
+    --surface: #1e1e2e; --border: #2e2e45;
+    --accent: #c8a96e; --accent2: #e8c98e;
+    --text: #e8e6f0; --text2: #a09dbb; --text3: #6b6884;
+    --red: #e05c6a; --green: #5ce0a0;
+    --reader-bg: #0f0f16;
+    --reader-text: #d8d4e8;
+    --font-size: 1.05rem;
+    --line-height: 1.85;
+    --radius: 10px;
+  }
+  .light-mode {
+    --reader-bg: #faf8f2;
+    --reader-text: #2a2520;
+    --bg: #f5f3ed; --bg2: #ede9df;
+    --surface: #fff; --border: #d4cfc2;
+    --text: #2a2520; --text2: #6b6258; --text3: #a09888;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--reader-bg); color: var(--reader-text); font-family: 'Lato', sans-serif; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+
+  /* TOP BAR */
+  .top-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,13,18,0.92); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px; display: flex; align-items: center; gap: 10px; height: 52px;
+    transition: background 0.3s;
+  }
+  .light-mode .top-bar { background: rgba(245,243,237,0.95); }
+  .back-btn {
+    background: none; border: none; color: var(--text2);
+    cursor: pointer; padding: 6px; border-radius: 6px;
+    display: flex; align-items: center; transition: color 0.2s;
+    text-decoration: none;
+  }
+  .back-btn:hover { color: var(--accent); }
+  .chapter-nav-title {
+    flex: 1; min-width: 0;
+    font-size: 0.8rem; color: var(--text3);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .top-actions { display: flex; gap: 4px; }
+  .top-btn {
+    background: none; border: none;
+    color: var(--text2); cursor: pointer;
+    padding: 7px; border-radius: 6px; transition: all 0.2s;
+    font-size: 0.85rem; display: flex; align-items: center;
+  }
+  .top-btn:hover { color: var(--accent); background: rgba(200,169,110,0.1); }
+
+  /* SETTINGS PANEL */
+  .settings-panel {
+    position: fixed; top: 52px; right: 0; z-index: 99;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 0 0 0 var(--radius);
+    padding: 16px; width: 220px;
+    box-shadow: -4px 4px 24px rgba(0,0,0,0.5);
+    display: none;
+  }
+  .settings-panel.open { display: block; }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .settings-label { font-size: 0.82rem; color: var(--text2); }
+  .font-controls { display: flex; gap: 6px; align-items: center; }
+  .font-btn {
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; width: 28px; height: 28px;
+    cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .font-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .font-size-val { font-size: 0.8rem; color: var(--text2); min-width: 28px; text-align: center; }
+  .mode-toggle {
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 4px 12px;
+    cursor: pointer; font-size: 0.8rem; transition: all 0.2s; font-family: 'Lato', sans-serif;
+  }
+  .mode-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    position: fixed; top: 52px; left: 0; right: 0; z-index: 98;
+    height: 2px; background: var(--border);
+  }
+  .progress-fill {
+    height: 100%; background: var(--accent);
+    width: 0%; transition: width 0.1s;
+  }
+
+  /* CHAPTER CONTENT */
+  .chapter-wrap { max-width: 680px; margin: 0 auto; padding: 36px 20px 80px; }
+  .chapter-header { margin-bottom: 32px; text-align: center; }
+  .chapter-series {
+    font-size: 0.78rem; color: var(--text3);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .chapter-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
+    color: var(--accent); line-height: 1.3;
+    margin-bottom: 20px;
+  }
+  .chapter-divider {
+    display: flex; align-items: center; gap: 12px; color: var(--text3);
+    margin-bottom: 32px;
+  }
+  .chapter-divider::before, .chapter-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .chapter-divider span { font-size: 0.7rem; letter-spacing: 0.15em; }
+
+  .chapter-body p {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: var(--font-size);
+    line-height: var(--line-height);
+    color: var(--reader-text);
+    margin-bottom: 1.4em;
+    text-align: justify;
+    transition: font-size 0.2s, color 0.3s;
+  }
+  .chapter-body p:first-child::first-letter {
+    font-size: 3em; line-height: 0.8;
+    float: left; margin: 0.05em 0.1em 0 0;
+    color: var(--accent); font-family: 'Cinzel', serif;
+  }
+  .chapter-body code {
+    font-family: 'Courier New', monospace;
+    background: rgba(200,169,110,0.1); color: var(--accent);
+    padding: 2px 6px; border-radius: 4px;
+    font-size: 0.85em;
+  }
+  .chapter-body pre {
+    background: #0a0a10; border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 16px; margin: 0 0 1.4em;
+    overflow-x: auto; font-family: 'Courier New', monospace;
+    font-size: 0.82em; color: #a0c8a0; line-height: 1.5;
+  }
+  .light-mode .chapter-body pre { background: #f0ede6; color: #2a5a2a; }
+
+  /* CHAPTER NAV BOTTOM */
+  .chapter-nav {
+    display: flex; gap: 10px; margin-top: 40px;
+    border-top: 1px solid var(--border); padding-top: 24px;
+  }
+  .nav-chapter-btn {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius);
+    padding: 14px 16px; cursor: pointer; text-align: center;
+    text-decoration: none; transition: all 0.2s; font-family: 'Lato', sans-serif;
+    display: block;
+  }
+  .nav-chapter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-chapter-btn.disabled { opacity: 0.35; pointer-events: none; }
+  .nav-label { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
+  .nav-ch-title { font-size: 0.85rem; font-weight: 700; }
+
+  /* LOADING */
+  .loading-screen {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 60vh; gap: 16px;
+  }
+  .spinner {
+    width: 32px; height: 32px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 0.85rem; color: var(--text3); }
+
+  /* ERROR */
+  .error-screen { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .error-screen h2 { color: var(--red); margin-bottom: 8px; font-family: 'Cinzel', serif; }
+
+  /* ADWALL OVERLAY */
+  .adwall-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(10,10,16,0.97); backdrop-filter: blur(8px);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    padding: 30px; text-align: center;
+  }
+  .adwall-overlay.show { display: flex; }
+  .adwall-icon { font-size: 3rem; margin-bottom: 16px; }
+  .adwall-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--accent); margin-bottom: 10px; }
+  .adwall-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 28px; line-height: 1.6; }
+  .adwall-btn {
+    background: var(--accent); color: #1a1410; border: none;
+    border-radius: var(--radius); padding: 14px 32px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: 'Lato', sans-serif; transition: background 0.2s;
+    text-decoration: none; display: inline-block;
+  }
+  .adwall-btn:hover { background: var(--accent2); }
+  .adwall-back { margin-top: 14px; font-size: 0.8rem; color: var(--text3); cursor: pointer; }
+  .adwall-back:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- ADWALL OVERLAY -->
+<div class="adwall-overlay" id="adwall">
+  <div class="adwall-icon">🔒</div>
+  <div class="adwall-title">Locked Chapter</div>
+  <div class="adwall-sub">This chapter requires unlocking.<br>Complete a quick task to gain access.</div>
+  <a class="adwall-btn" id="adwall-link" href="#">Unlock Chapter</a>
+  <div class="adwall-back" onclick="history.back()">← Go Back</div>
+</div>
+
+<div class="top-bar">
+  <a class="back-btn" id="back-link" href="index.html">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+  </a>
+  <div class="chapter-nav-title" id="top-title">Loading...</div>
+  <div class="top-actions">
+    <button class="top-btn" id="settings-btn" title="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-panel" id="settings-panel">
+  <div class="settings-row">
+    <span class="settings-label">Font Size</span>
+    <div class="font-controls">
+      <button class="font-btn" id="font-dec">A−</button>
+      <span class="font-size-val" id="font-val">17</span>
+      <button class="font-btn" id="font-inc">A+</button>
+    </div>
+  </div>
+  <div class="settings-row">
+    <span class="settings-label">Theme</span>
+    <button class="mode-toggle" id="mode-toggle">☀ Light</button>
+  </div>
+</div>
+
+<div id="content">
+  <div class="loading-screen">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading chapter...</div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const hash = params.get('h');
+let chapterData = null;
+let hashmapData = null;
+let currentEntry = null;
+let fontSize = parseInt(localStorage.getItem('reader_fontsize') || '17');
+let isLight = localStorage.getItem('reader_light') === '1';
+
+if (!hash) { location.href = 'index.html'; }
+
+// Apply saved settings immediately
+applyFontSize();
+applyMode();
+
+async function init() {
+  try {
+    const hmRes = await fetch('data/hashmap.json');
+    hashmapData = await hmRes.json();
+    currentEntry = hashmapData[hash];
+
+    if (!currentEntry) {
+      showError('Chapter not found', 'This chapter link may be invalid or expired.');
+      return;
+    }
+
+    if (currentEntry.locked) {
+      showAdwall();
+      return;
+    }
+
+    // Load chapter JSON
+    const chRes = await fetch(`data/chapters/${currentEntry.file}`);
+    if (!chRes.ok) throw new Error('Chapter file not found');
+    chapterData = await chRes.json();
+
+    // Preload next chapter
+    if (currentEntry.next) {
+      const nextEntry = hashmapData[currentEntry.next];
+      if (nextEntry && !nextEntry.locked) {
+        fetch(`data/chapters/${nextEntry.file}`).catch(() => {});
+      }
+    }
+
+    renderChapter();
+    updateBackLink();
+    saveProgress();
+
+  } catch(e) {
+    showError('Failed to load chapter', e.message);
+    console.error(e);
+  }
+}
+
+function renderChapter() {
+  const d = chapterData;
+  const entry = currentEntry;
+
+  // Detect code blocks (lines starting with >/space or containing {})
+  function processContent(paragraphs) {
+    let html = '';
+    let codeBuffer = [];
+    let inCode = false;
+
+    paragraphs.forEach(para => {
+      const isCode = para.startsWith('>') || para.startsWith('spell ') || para.startsWith('//') || para.startsWith('NAME:') || para.startsWith('SYSTEM');
+      if (isCode) {
+        codeBuffer.push(para.replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+        inCode = true;
+      } else {
+        if (inCode) { html += `<pre>${codeBuffer.join('\n')}</pre>`; codeBuffer = []; inCode = false; }
+        html += `<p>${para.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`;
+      }
+    });
+    if (codeBuffer.length) html += `<pre>${codeBuffer.join('\n')}</pre>`;
+    return html;
+  }
+
+  const prevEntry = entry.prev ? hashmapData[entry.prev] : null;
+  const nextEntry = entry.next ? hashmapData[entry.next] : null;
+
+  document.title = `${d.title} — NovaShelves`;
+  document.getElementById('top-title').textContent = d.title;
+
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="chapter-wrap">
+      <div class="chapter-header">
+        <div class="chapter-series" id="series-breadcrumb">Loading series...</div>
+        <h1 class="chapter-title">${escHtml(d.title)}</h1>
+        <div class="chapter-divider"><span>✦ ✦ ✦</span></div>
+      </div>
+      <div class="chapter-body">${processContent(d.content || [])}</div>
+      <div class="chapter-nav">
+        ${prevEntry
+          ? `<a class="nav-chapter-btn" href="chapter.html?h=${entry.prev}">
+              <div class="nav-label">◀ Previous</div>
+              <div class="nav-ch-title">Ch. ${prevEntry.chapter}</div>
+             </a>`
+          : `<span class="nav-chapter-btn disabled"><div class="nav-label">◀ Previous</div><div class="nav-ch-title">First Chapter</div></span>`
+        }
+        <a class="nav-chapter-btn" href="series.html?id=${entry.series}" style="text-align:center">
+          <div class="nav-label">≡</div>
+          <div class="nav-ch-title">All Chapters</div>
+        </a>
+        ${nextEntry && !nextEntry.locked
+          ? `<a class="nav-chapter-btn" href="chapter.html?h=${entry.next}">
+              <div class="nav-label">Next ▶</div>
+              <div class="nav-ch-title">Ch. ${nextEntry.chapter}</div>
+             </a>`
+          : nextEntry && nextEntry.locked
+          ? `<span class="nav-chapter-btn" onclick="showAdwall()" style="cursor:pointer">
+              <div class="nav-label">Next ▶</div>
+              <div class="nav-ch-title">🔒 Locked</div>
+             </span>`
+          : `<span class="nav-chapter-btn disabled"><div class="nav-label">Next ▶</div><div class="nav-ch-title">Latest</div></span>`
+        }
+      </div>
+    </div>
+  `;
+
+  // Load series name for breadcrumb
+  fetch('data/series.json').then(r=>r.json()).then(series => {
+    const s = series.find(s=>s.id === entry.series);
+    const el = document.getElementById('series-breadcrumb');
+    if (s && el) el.innerHTML = `<a href="series.html?id=${entry.series}" style="color:var(--text3);text-decoration:none">${s.title}</a>`;
+  }).catch(()=>{});
+
+  setupProgress();
+  applyFontSize();
+}
+
+function showAdwall() {
+  const overlay = document.getElementById('adwall');
+  const link = document.getElementById('adwall-link');
+  const returnUrl = encodeURIComponent(`chapter.html?h=${hash}`);
+  // Configure your adwall URL here:
+  link.href = `https://your-adwall.com/?next=${returnUrl}`;
+  overlay.classList.add('show');
+  document.getElementById('content').innerHTML = '';
+}
+
+function updateBackLink() {
+  if (currentEntry) {
+    document.getElementById('back-link').href = `series.html?id=${currentEntry.series}`;
+  }
+}
+
+function saveProgress() {
+  if (!currentEntry || !chapterData) return;
+  const data = { hash, title: chapterData.title, volume: currentEntry.volume, chapter: currentEntry.chapter };
+  localStorage.setItem(`continue_${currentEntry.series}`, JSON.stringify(data));
+  localStorage.setItem(`read_${hash}`, '1');
+}
+
+function setupProgress() {
+  const bar = document.getElementById('progress');
+  window.addEventListener('scroll', () => {
+    const scrollTop = window.scrollY;
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = docH > 0 ? (scrollTop / docH) * 100 : 0;
+    bar.style.width = pct + '%';
+    // Save position
+    localStorage.setItem(`pos_${hash}`, scrollTop);
+  }, { passive: true });
+  // Restore position
+  const savedPos = localStorage.getItem(`pos_${hash}`);
+  if (savedPos) setTimeout(() => window.scrollTo(0, parseInt(savedPos)), 100);
+}
+
+// Settings
+document.getElementById('settings-btn').onclick = () => {
+  document.getElementById('settings-panel').classList.toggle('open');
+};
+document.addEventListener('click', e => {
+  if (!e.target.closest('#settings-panel') && !e.target.closest('#settings-btn')) {
+    document.getElementById('settings-panel').classList.remove('open');
+  }
+});
+
+function applyFontSize() {
+  document.documentElement.style.setProperty('--font-size', fontSize + 'px');
+  const el = document.getElementById('font-val');
+  if (el) el.textContent = fontSize;
+}
+
+function applyMode() {
+  document.body.classList.toggle('light-mode', isLight);
+  const btn = document.getElementById('mode-toggle');
+  if (btn) btn.textContent = isLight ? '🌙 Dark' : '☀ Light';
+}
+
+document.getElementById('font-inc').onclick = () => { if (fontSize < 24) { fontSize++; applyFontSize(); localStorage.setItem('reader_fontsize', fontSize); } };
+document.getElementById('font-dec').onclick = () => { if (fontSize > 13) { fontSize--; applyFontSize(); localStorage.setItem('reader_fontsize', fontSize); } };
+document.getElementById('mode-toggle').onclick = () => { isLight = !isLight; applyMode(); localStorage.setItem('reader_light', isLight ? '1' : '0'); };
+
+function showError(title, msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="error-screen">
+      <h2>${title}</h2>
+      <p>${msg}</p>
+      <br><a href="index.html" style="color:var(--accent)">← Return Home</a>
+    </div>`;
+}
+
+function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+init();
+</script>
+</body>
+</html>

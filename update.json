@@ -1,0 +1,34 @@
+[
+  {
+    "series_id": "void-walkers-diary",
+    "title": "Void Walker's Diary",
+    "cover": "https://picsum.photos/seed/void/300/420",
+    "reason": "Volume 1 Chapter 7 added",
+    "url": "/series.html?id=void-walkers-diary",
+    "timestamp": "2026-05-11T10:00:00Z"
+  },
+  {
+    "series_id": "demon-kings-redemption",
+    "title": "Demon King's Redemption",
+    "cover": "https://picsum.photos/seed/demon/300/420",
+    "reason": "Volume 4 Chapter 41 added",
+    "url": "/series.html?id=demon-kings-redemption",
+    "timestamp": "2026-05-10T08:30:00Z"
+  },
+  {
+    "series_id": "silver-throne-chronicles",
+    "title": "Silver Throne Chronicles",
+    "cover": "https://picsum.photos/seed/silver/300/420",
+    "reason": "Volume 3 Chapter 28 added",
+    "url": "/series.html?id=silver-throne-chronicles",
+    "timestamp": "2026-05-09T14:00:00Z"
+  },
+  {
+    "series_id": "the-arcane-compiler",
+    "title": "The Arcane Compiler",
+    "cover": "https://picsum.photos/seed/arcane/300/420",
+    "reason": "Volume 2 Chapter 14 added",
+    "url": "/series.html?id=the-arcane-compiler",
+    "timestamp": "2026-05-08T12:00:00Z"
+  }
+]

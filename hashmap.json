@@ -1,0 +1,47 @@
+{
+  "k3mX9pQrL": {
+    "series": "the-arcane-compiler",
+    "volume": 1,
+    "chapter": 1,
+    "file": "f7n2x.json",
+    "locked": false,
+    "prev": null,
+    "next": "w8vB4tNmK"
+  },
+  "w8vB4tNmK": {
+    "series": "the-arcane-compiler",
+    "volume": 1,
+    "chapter": 2,
+    "file": "q1r8p.json",
+    "locked": false,
+    "prev": "k3mX9pQrL",
+    "next": "zP5hJ7cYs"
+  },
+  "zP5hJ7cYs": {
+    "series": "the-arcane-compiler",
+    "volume": 1,
+    "chapter": 3,
+    "file": "b4d9m.json",
+    "locked": true,
+    "prev": "w8vB4tNmK",
+    "next": null
+  },
+  "mR6kT2wXn": {
+    "series": "void-walkers-diary",
+    "volume": 1,
+    "chapter": 1,
+    "file": "j5c3v.json",
+    "locked": false,
+    "prev": null,
+    "next": "nL9sF4pBq"
+  },
+  "nL9sF4pBq": {
+    "series": "void-walkers-diary",
+    "volume": 1,
+    "chapter": 2,
+    "file": "x7k1n.json",
+    "locked": true,
+    "prev": "mR6kT2wXn",
+    "next": null
+  }
+}

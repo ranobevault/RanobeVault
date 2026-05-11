@@ -1,0 +1,50 @@
+[
+  {
+    "id": "the-arcane-compiler",
+    "title": "The Arcane Compiler",
+    "cover": "https://picsum.photos/seed/arcane/300/420",
+    "genres": ["Fantasy", "Isekai", "Magic"],
+    "synopsis": "A software engineer reincarnates into a world where magic is code. Armed with his knowledge of programming and a mysterious system that treats spells like functions, he sets out to debug the fundamental flaws of the world itself.",
+    "latest_volume": 2,
+    "latest_chapter": 14,
+    "status": "Ongoing",
+    "author": "Kaminari Ryu",
+    "rating": 4.8
+  },
+  {
+    "id": "silver-throne-chronicles",
+    "title": "Silver Throne Chronicles",
+    "cover": "https://picsum.photos/seed/silver/300/420",
+    "genres": ["Fantasy", "Political", "Adventure"],
+    "synopsis": "The forgotten third prince discovers he alone can wield the legendary Silver Flame — a power feared by gods and kings alike. Now he must navigate court politics, ancient prophecies, and a war that could consume the entire continent.",
+    "latest_volume": 3,
+    "latest_chapter": 28,
+    "status": "Ongoing",
+    "author": "Meihua Chen",
+    "rating": 4.6
+  },
+  {
+    "id": "void-walkers-diary",
+    "title": "Void Walker's Diary",
+    "cover": "https://picsum.photos/seed/void/300/420",
+    "genres": ["Sci-Fi", "Mystery", "Psychological"],
+    "synopsis": "She wakes up in a new body every seven days with no memory of her past lives — only a leather-bound diary that updates itself. Each life holds a clue. Each death brings her closer to the truth.",
+    "latest_volume": 1,
+    "latest_chapter": 7,
+    "status": "Ongoing",
+    "author": "Sable Noir",
+    "rating": 4.9
+  },
+  {
+    "id": "demon-kings-redemption",
+    "title": "Demon King's Redemption",
+    "cover": "https://picsum.photos/seed/demon/300/420",
+    "genres": ["Fantasy", "Romance", "Action"],
+    "synopsis": "Defeated after a thousand years of conquest, the Demon King is reincarnated as a human child in the very kingdom he once destroyed. Growing up among his former enemies, he must choose: return to his old ways or forge a new destiny.",
+    "latest_volume": 4,
+    "latest_chapter": 41,
+    "status": "Ongoing",
+    "author": "Takeshi Mori",
+    "rating": 4.7
+  }
+]
