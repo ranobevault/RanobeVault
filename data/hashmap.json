@@ -34,6 +34,15 @@
     "file": "w62vg.json",
     "locked": false,
     "prev": "D3pGHy75q",
+    "next": "BsjruyTyK"
+  },
+  "BsjruyTyK": {
+    "series": "testing",
+    "volume": 1,
+    "chapter": 4,
+    "file": "umj43.json",
+    "locked": false,
+    "prev": "8uqkkKVOs",
     "next": null
   }
 }
