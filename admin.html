@@ -350,8 +350,8 @@
           </div>
         </div>
         <div class="toggle-row">
-          <label class="toggle"><input type="checkbox" id="us-locked"><span class="toggle-slider"></span></label>
-          <span class="toggle-label">Locked chapter</span>
+          <label class="toggle"><input type="checkbox" id="us-locked" onchange="onLockedToggle()"><span class="toggle-slider"></span></label>
+          <span class="toggle-label">Locked chapter (behind adwall)</span>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -368,9 +368,29 @@
 
         <div class="gen-preview show" id="us-preview">Will generate: hash=<span id="us-phash">—</span>, file=<span id="us-pfile">—</span></div>
 
+        <!-- STEP 1: Upload only button (shown when locked is on) -->
+        <div id="us-locked-step1" style="display:none;margin-bottom:14px">
+          <div style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">📌 <strong>Locked chapter flow:</strong> First upload the file to get your chapter URL, then set up Linkvertise, then publish.</div>
+          <button class="btn-sm" style="background:var(--blue);border-color:var(--blue);color:#0a1020;font-weight:700" id="us-upload-only-btn" onclick="uploadOnlyChapter()">📤 Step 1 — Upload File & Get Chapter Link</button>
+        </div>
+
+        <!-- STEP 2: Adwall URL input (shown after upload completes) -->
+        <div id="us-adwall-step" style="display:none;background:rgba(200,169,110,0.06);border:1px solid var(--accent);border-radius:var(--radius);padding:16px;margin-bottom:14px">
+          <div style="font-size:0.82rem;color:var(--accent);font-weight:700;margin-bottom:8px">🔗 Step 2 — Create your Linkvertise ad</div>
+          <div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px">Copy the chapter link below → go to Linkvertise → paste it as the destination URL → copy the Linkvertise link they give you → paste it in the field below.</div>
+          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">Chapter URL (paste this into Linkvertise)</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+            <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:monospace;font-size:0.75rem;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="us-chapter-url"></div>
+            <button class="btn-sm" onclick="copyChapterUrl()" id="us-copy-btn" style="flex-shrink:0">📋 Copy</button>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">Linkvertise Ad Link *</div>
+          <input class="form-input" id="us-adwall-url" placeholder="https://linkvertise.com/123456/your-chapter" style="margin-bottom:6px">
+          <div style="font-size:0.7rem;color:var(--text3)">Paste the link Linkvertise gives you after creating the ad.</div>
+        </div>
+
         <div style="display:flex;gap:10px;flex-wrap:wrap">
           <button class="btn-sm" onclick="generateUSPreview()">🔄 Generate IDs</button>
-          <button class="btn-sm primary" id="us-submit" onclick="submitUpdateSeries()">🚀 Upload &amp; Publish</button>
+          <button class="btn-sm primary" id="us-submit" onclick="submitUpdateSeries()">🚀 Publish</button>
         </div>
 
         <div class="upload-progress" id="us-progress"><div class="upload-bar" id="us-bar" style="width:0%"></div></div>
@@ -700,6 +720,70 @@ async function submitNewSeries() {
   }
 }
 
+// ========== LOCKED CHAPTER FLOW ==========
+let usFileUploaded = false; // tracks if file was already uploaded in step 1
+
+function onLockedToggle() {
+  const locked = document.getElementById('us-locked').checked;
+  document.getElementById('us-locked-step1').style.display = locked ? 'block' : 'none';
+  document.getElementById('us-adwall-step').style.display = 'none';
+  document.getElementById('us-submit').textContent = locked ? '🚀 Publish' : '🚀 Upload & Publish';
+  // Reset step state when toggling
+  usFileUploaded = false;
+  document.getElementById('us-adwall-url').value = '';
+  document.getElementById('us-chapter-url').textContent = '';
+}
+
+async function uploadOnlyChapter() {
+  const cfg = getConfig(); if (!cfg) return;
+  const seriesId = document.getElementById('us-series').value;
+  if (!seriesId) { alert('Please select a series first.'); return; }
+  const fileInput = document.getElementById('us-file');
+  if (!fileInput.files[0]) { alert('Please select a chapter file first.'); return; }
+  if (!usHash) generateUSPreview();
+
+  const vol = parseInt(document.getElementById('us-vol').value) || 1;
+  const chNum = parseInt(document.getElementById('us-ch').value) || 1;
+  const chTitle = document.getElementById('us-chtitle').value.trim() || `Volume ${vol} Chapter ${chNum}`;
+
+  clearLog('us-log');
+  setProgress('us-bar', 'us-progress', 10);
+  log('us-log', 'Uploading chapter file...', 'info');
+  document.getElementById('us-upload-only-btn').disabled = true;
+
+  try {
+    const raw = await readFile(fileInput);
+    const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId);
+    const chPath = `data/chapters/${usFile}`;
+    await ghPutFile(cfg, chPath, chapterContent, `Upload (locked) ${seriesId} ch${chNum}`);
+    setProgress('us-bar', 'us-progress', 100);
+    log('us-log', `✅ File uploaded! Now set up your Linkvertise link below.`, 'ok');
+    usFileUploaded = true;
+
+    // Build the chapter URL and show step 2
+    const base = `https://${cfg.owner}.github.io/${cfg.repo}`;
+    const chapterUrl = `${base}/chapter.html?h=${usHash}`;
+    document.getElementById('us-chapter-url').textContent = chapterUrl;
+    document.getElementById('us-adwall-step').style.display = 'block';
+    document.getElementById('us-locked-step1').style.display = 'none';
+  } catch(e) {
+    log('us-log', `❌ Error: ${e.message}`, 'err');
+  } finally {
+    document.getElementById('us-upload-only-btn').disabled = false;
+  }
+}
+
+function copyChapterUrl() {
+  const url = document.getElementById('us-chapter-url').textContent;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('us-copy-btn');
+    btn.textContent = '✓ Copied!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  });
+}
+
 // ========== UPDATE SERIES ==========
 let cachedSeries = null;
 
@@ -738,8 +822,10 @@ async function submitUpdateSeries() {
   const locked = document.getElementById('us-locked').checked;
   const prevHash = document.getElementById('us-prev').value.trim() || null;
   const fileInput = document.getElementById('us-file');
+  const adwallUrl = document.getElementById('us-adwall-url').value.trim();
 
-  if (!fileInput.files[0]) { alert('Please select a chapter file.'); return; }
+  if (!usFileUploaded && !fileInput.files[0]) { alert('Please select a chapter file.'); return; }
+  if (locked && !adwallUrl) { alert('Please complete Step 2: upload the file first and paste your Linkvertise link.'); return; }
   if (!usHash) generateUSPreview();
 
   clearLog('us-log');
@@ -752,12 +838,16 @@ async function submitUpdateSeries() {
     const seriesTitle = series?.title || seriesId;
     const seriesCover = series?.cover || '';
 
-    // 1. Parse & upload chapter
-    const raw = await readFile(fileInput);
-    const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId);
-    const chPath = `data/chapters/${usFile}`;
-    await ghPutFile(cfg, chPath, chapterContent, `Add ${seriesId} ch${chNum}`);
-    log('us-log', `Chapter uploaded → ${usFile} ✓`, 'ok');
+    // 1. Upload chapter file (skip if already uploaded in step 1)
+    if (!usFileUploaded) {
+      const raw = await readFile(fileInput);
+      const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId);
+      const chPath = `data/chapters/${usFile}`;
+      await ghPutFile(cfg, chPath, chapterContent, `Add ${seriesId} ch${chNum}`);
+      log('us-log', `Chapter uploaded → ${usFile} ✓`, 'ok');
+    } else {
+      log('us-log', `Chapter file already uploaded → ${usFile} ✓`, 'ok');
+    }
     setProgress('us-bar', 'us-progress', 25);
 
     // 2. Update hashmap — set next on previous entry
@@ -767,7 +857,6 @@ async function submitUpdateSeries() {
     // Auto-find prev hash if not provided
     let actualPrev = prevHash;
     if (!actualPrev) {
-      // Find last chapter of this series in hashmap
       const seriesEntries = Object.entries(hashmap).filter(([h, v]) => v.series === seriesId);
       if (seriesEntries.length > 0) {
         seriesEntries.sort((a,b) => (a[1].chapter||0) - (b[1].chapter||0));
@@ -775,7 +864,9 @@ async function submitUpdateSeries() {
       }
     }
 
-    hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNum, file: usFile, locked, prev: actualPrev, next: null };
+    const hashmapEntry = { series: seriesId, volume: vol, chapter: chNum, file: usFile, locked, prev: actualPrev, next: null };
+    if (locked && adwallUrl) hashmapEntry.adwallUrl = adwallUrl;
+    hashmap[usHash] = hashmapEntry;
     if (actualPrev && hashmap[actualPrev]) { hashmap[actualPrev].next = usHash; }
     await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Update hash: ${seriesId} ch${chNum}`, hashmapSha);
     log('us-log', 'hashmap.json updated ✓', 'ok');
@@ -814,6 +905,10 @@ async function submitUpdateSeries() {
 
     log('us-log', `✅ Done! Chapter URL: chapter.html?h=${usHash}`, 'ok');
     if (actualPrev) log('us-log', `Linked from previous: ${actualPrev}`, 'info');
+    usFileUploaded = false;
+    document.getElementById('us-adwall-step').style.display = 'none';
+    document.getElementById('us-locked-step1').style.display = document.getElementById('us-locked').checked ? 'block' : 'none';
+    document.getElementById('us-adwall-url').value = '';
     generateUSPreview();
 
   } catch(e) {

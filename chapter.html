@@ -388,9 +388,12 @@ function renderChapter() {
 function showAdwall() {
   const overlay = document.getElementById('adwall');
   const link = document.getElementById('adwall-link');
-  const returnUrl = encodeURIComponent(`chapter.html?h=${hash}`);
-  // Configure your adwall URL here:
-  link.href = `https://your-adwall.com/?next=${returnUrl}`;
+  // Use the adwallUrl stored in hashmap, fallback to a placeholder
+  link.href = (currentEntry && currentEntry.adwallUrl) ? currentEntry.adwallUrl : '#';
+  if (!currentEntry || !currentEntry.adwallUrl) {
+    link.textContent = 'Link not configured';
+    link.style.opacity = '0.5';
+  }
   overlay.classList.add('show');
   document.getElementById('content').innerHTML = '';
 }
