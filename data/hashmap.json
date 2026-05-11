@@ -24,7 +24,16 @@
     "file": "ce0vh.json",
     "locked": true,
     "prev": "HZ9VkaPUl",
-    "next": null,
+    "next": "8uqkkKVOs",
     "adwallUrl": "https://link-target.net/718937/An3znjEPEmtk"
+  },
+  "8uqkkKVOs": {
+    "series": "testing",
+    "volume": 1,
+    "chapter": 4,
+    "file": "w62vg.json",
+    "locked": false,
+    "prev": "D3pGHy75q",
+    "next": null
   }
 }
