@@ -112,7 +112,7 @@
     gap: 12px;
   }
   .chapter-item:hover { border-color: var(--accent); transform: translateX(2px); }
-  .chapter-item.locked { cursor: default; }
+  .chapter-item.locked { cursor: pointer; }
   .ch-num { font-size: 0.75rem; color: var(--text3); min-width: 50px; flex-shrink: 0; }
   .ch-title { flex: 1; font-size: 0.88rem; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ch-badge {
@@ -120,7 +120,7 @@
     padding: 2px 8px; border-radius: 4px;
   }
   .ch-badge.free { background: rgba(92,224,160,0.12); color: var(--green); }
-  .ch-badge.locked { background: rgba(224,92,106,0.12); color: var(--red); }
+  .ch-badge.locked { background: rgba(200,169,110,0.13); color: var(--accent); }
   .ch-lock-icon { flex-shrink: 0; color: var(--red); font-size: 0.75rem; }
 
   .loading { text-align: center; padding: 40px; color: var(--text3); font-size: 0.9rem; }
@@ -140,6 +140,61 @@
   #continue-banner.show { display: block; }
   .cont-label { font-size: 0.72rem; color: var(--accent); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
   .cont-title { font-size: 0.88rem; }
+
+  /* UNLOCK MODAL */
+  .unlock-modal-backdrop {
+    position: fixed; inset: 0; z-index: 999;
+    background: rgba(8,8,14,0.85); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .unlock-modal-backdrop.show { opacity: 1; pointer-events: all; }
+  .unlock-modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px 24px; max-width: 360px; width: 100%;
+    text-align: center; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    transform: translateY(12px); transition: transform 0.25s;
+    position: relative;
+  }
+  .unlock-modal-backdrop.show .unlock-modal { transform: translateY(0); }
+  .unlock-modal-icon {
+    font-size: 2.2rem; margin-bottom: 12px; display: block;
+  }
+  .unlock-modal-title {
+    font-family: 'Cinzel', serif; font-size: 1.05rem;
+    color: var(--accent); margin-bottom: 8px; letter-spacing: 0.04em;
+  }
+  .unlock-modal-chapter {
+    font-size: 0.78rem; color: var(--text3);
+    margin-bottom: 14px; font-style: italic;
+  }
+  .unlock-modal-body {
+    font-size: 0.83rem; color: var(--text2); line-height: 1.65;
+    margin-bottom: 22px;
+  }
+  .unlock-modal-body strong { color: var(--text); font-weight: 700; }
+  .unlock-modal-divider {
+    height: 1px; background: var(--border); margin: 0 0 20px;
+  }
+  .unlock-modal-btn {
+    display: block; width: 100%;
+    background: var(--accent); color: #1a1410;
+    border: none; border-radius: 10px;
+    padding: 13px 20px; font-size: 0.92rem;
+    font-weight: 700; font-family: 'Lato', sans-serif;
+    cursor: pointer; transition: background 0.2s, transform 0.1s;
+    text-decoration: none; margin-bottom: 10px;
+  }
+  .unlock-modal-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .unlock-modal-btn:active { transform: translateY(0); }
+  .unlock-modal-cancel {
+    font-size: 0.75rem; color: var(--text3);
+    cursor: pointer; transition: color 0.2s;
+    background: none; border: none; font-family: 'Lato', sans-serif;
+    width: 100%; padding: 4px;
+  }
+  .unlock-modal-cancel:hover { color: var(--text2); }
 </style>
 </head>
 <body>
@@ -278,7 +333,7 @@ function renderChapters(chapters) {
       return `<div class="chapter-item locked" onclick="handleLocked('${ch.hash}','${ch.title}')">
         <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
         <span class="ch-title">${ch.title}</span>
-        <span class="ch-badge locked">🔒 Locked</span>
+        <span class="ch-badge locked">✦ Unlock Free</span>
       </div>`;
     }
     return `<a class="chapter-item" href="chapter.html?h=${ch.hash}">
@@ -289,12 +344,30 @@ function renderChapters(chapters) {
   }).join('');
 }
 
-function handleLocked(hash, title) {
-  // In production: redirect to adwall. Here: show alert.
-  if (confirm(`"${title}" is locked.\n\nGo to unlock page? (In production, this would redirect to your adwall with:\n?next=chapter.html?h=${hash})`)) {
-    // window.location.href = `https://your-adwall.com/?next=${encodeURIComponent('chapter.html?h='+hash)}`;
-    alert('Adwall URL would go here. Configure in series.html handleLocked().');
+async function handleLocked(hash, title) {
+  // Show modal first, then redirect on confirm
+  const backdrop = document.getElementById('unlock-backdrop');
+  const chapterName = document.getElementById('unlock-chapter-name');
+  const goBtn = document.getElementById('unlock-go-btn');
+
+  chapterName.textContent = title;
+  goBtn.href = '#';
+  backdrop.classList.add('show');
+
+  // Fetch adwall URL
+  try {
+    const res = await fetch('data/hashmap.json');
+    const hashmap = await res.json();
+    const entry = hashmap[hash];
+    goBtn.href = (entry && entry.adwallUrl) ? entry.adwallUrl : `chapter.html?h=${hash}`;
+  } catch(e) {
+    goBtn.href = `chapter.html?h=${hash}`;
   }
+}
+
+function closeUnlockModal(e) {
+  if (e && e.target !== document.getElementById('unlock-backdrop')) return;
+  document.getElementById('unlock-backdrop').classList.remove('show');
 }
 
 function checkContinue(chapters) {
@@ -309,5 +382,22 @@ function checkContinue(chapters) {
 
 init();
 </script>
+
+<!-- UNLOCK MODAL -->
+<div class="unlock-modal-backdrop" id="unlock-backdrop" onclick="closeUnlockModal(event)">
+  <div class="unlock-modal">
+    <span class="unlock-modal-icon">✦</span>
+    <div class="unlock-modal-title">This Chapter is Free to Unlock</div>
+    <div class="unlock-modal-chapter" id="unlock-chapter-name"></div>
+    <div class="unlock-modal-divider"></div>
+    <div class="unlock-modal-body">
+      Just a quick ad to get through — it takes less than a minute.<br><br>
+      <strong>Watching the ad helps keep this site running</strong> and lets the author know their work is appreciated. It's a small thing, but it genuinely makes a difference.
+    </div>
+    <a class="unlock-modal-btn" id="unlock-go-btn" href="#">Watch Ad & Read Chapter →</a>
+    <button class="unlock-modal-cancel" onclick="closeUnlockModal()">Maybe later</button>
+  </div>
+</div>
+
 </body>
 </html>
