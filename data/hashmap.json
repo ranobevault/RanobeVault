@@ -6,6 +6,15 @@
     "file": "l1rhj.json",
     "locked": false,
     "prev": null,
+    "next": "HZ9VkaPUl"
+  },
+  "HZ9VkaPUl": {
+    "series": "testing",
+    "volume": 1,
+    "chapter": 2,
+    "file": "ufzha.json",
+    "locked": true,
+    "prev": "wc78Bw6bE",
     "next": null
   }
 }
