@@ -6,6 +6,26 @@
     "file": "l1rhj.json",
     "locked": false,
     "prev": null,
+    "next": "ioxpI17GX"
+  },
+  "ioxpI17GX": {
+    "series": "testing",
+    "volume": 1,
+    "chapter": 2,
+    "file": "ioxpI17GX.json",
+    "locked": true,
+    "adwallUrl": "https://direct-link.net/718937/hUDnAcKm17oo",
+    "unlocksPair": true,
+    "prev": "wc78Bw6bE",
+    "next": "pL01kBUyL"
+  },
+  "pL01kBUyL": {
+    "series": "testing",
+    "volume": 1,
+    "chapter": 3,
+    "file": "pL01kBUyL.json",
+    "locked": true,
+    "prev": "ioxpI17GX",
     "next": null
   }
 }
