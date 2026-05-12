@@ -364,21 +364,38 @@ async function handleLocked(hash, title) {
   const backdrop = document.getElementById('unlock-backdrop');
   const chapterName = document.getElementById('unlock-chapter-name');
   const goBtn = document.getElementById('unlock-go-btn');
+  const modalBody = document.getElementById('unlock-modal-body');
 
   chapterName.textContent = title;
   goBtn.href = '#';
+  goBtn.textContent = 'Watch/View Ad & Read Chapter →';
+  modalBody.innerHTML = `Just a quick ad to get through — it takes less than a minute.<br><br>
+    <strong>Watching the ad helps keep this site running</strong> and lets the provider know their work is appreciated. It's a small thing, but it genuinely makes a difference.`;
   backdrop.classList.add('show');
 
-  // Fetch adwall URL
   try {
     const res = await fetch('data/hashmap.json');
     const hashmap = await res.json();
     const entry = hashmap[hash];
     const adwallUrl = (entry && entry.adwallUrl) ? entry.adwallUrl : `chapter.html?h=${hash}`;
     goBtn.href = adwallUrl;
-    // Set unlock flag immediately on click — before Linkvertise redirect
+
+    // Check if this unlocks a pair (current + next chapter)
+    const nextHash = entry && entry.next;
+    const nextEntry = nextHash && hashmap[nextHash];
+    const isPair = entry && entry.unlocksPair && nextHash && nextEntry;
+
+    if (isPair) {
+      const nextTitle = nextEntry.title || `Ch.${nextEntry.chapter}`;
+      modalBody.innerHTML = `Just a quick ad — and it's a good deal too.<br><br>
+        <strong>One ad unlocks this chapter AND the next one</strong> (${nextTitle}) for free. No extra steps.<br><br>
+        <span style="color:var(--text3);font-size:0.85em">Watching the ad supports the provider and keeps the site going.</span>`;
+      goBtn.textContent = 'Watch Ad & Unlock 2 Chapters →';
+    }
+
     goBtn.addEventListener('click', () => {
       localStorage.setItem(`unlocked_${hash}`, '1');
+      if (isPair && nextHash) localStorage.setItem(`unlocked_${nextHash}`, '1');
     }, { once: true });
   } catch(e) {
     goBtn.href = `chapter.html?h=${hash}`;
@@ -410,7 +427,7 @@ init();
     <div class="unlock-modal-title">This Chapter is Free to Unlock</div>
     <div class="unlock-modal-chapter" id="unlock-chapter-name"></div>
     <div class="unlock-modal-divider"></div>
-    <div class="unlock-modal-body">
+    <div class="unlock-modal-body" id="unlock-modal-body">
       Just a quick ad to get through — it takes less than a minute.<br><br>
       <strong>Watching the ad helps keep this site running</strong> and lets the provider know their work is appreciated. It's a small thing, but it genuinely makes a difference.
     </div>

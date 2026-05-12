@@ -202,6 +202,79 @@
   }
   .upload-progress.show { display: block; }
   .upload-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+
+  /* ── DELETE TAB ── */
+  .del-label { font-size:0.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;margin-top:2px }
+  .del-series-grid { display:flex;flex-direction:column;gap:6px;margin-bottom:14px }
+  .del-series-row {
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+    cursor:pointer;transition:border-color .18s,background .18s;
+  }
+  .del-series-row:hover { border-color:rgba(224,92,106,.5) }
+  .del-series-row.sel { border-color:var(--red);background:rgba(224,92,106,.07) }
+  .del-series-thumb { width:26px;height:36px;border-radius:3px;object-fit:cover;flex-shrink:0;background:var(--bg2) }
+  .del-series-info { flex:1;min-width:0 }
+  .del-series-name { font-size:.85rem;font-weight:700 }
+  .del-series-sub { font-size:.7rem;color:var(--text3);margin-top:1px }
+  .del-radio { width:15px;height:15px;accent-color:var(--red);flex-shrink:0 }
+
+  .del-filter-row { display:flex;gap:8px;align-items:center;margin-bottom:10px }
+  .del-search {
+    flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:7px 10px;font-family:'Lato',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s
+  }
+  .del-search:focus { border-color:var(--accent) }
+  .del-pills { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px }
+  .del-pill {
+    padding:3px 12px;border-radius:20px;font-size:.73rem;cursor:pointer;
+    border:1px solid var(--border);color:var(--text2);background:var(--bg3);transition:all .18s
+  }
+  .del-pill:hover { border-color:var(--accent);color:var(--accent) }
+  .del-pill.on { background:rgba(200,169,110,.14);border-color:var(--accent);color:var(--accent) }
+
+  .del-ch-list { display:flex;flex-direction:column;gap:5px;margin-bottom:12px;max-height:320px;overflow-y:auto }
+  .del-ch-row {
+    display:flex;align-items:center;gap:10px;padding:8px 12px;
+    background:var(--bg3);border:1px solid var(--border);border-radius:7px;transition:all .18s;cursor:pointer
+  }
+  .del-ch-row:hover { border-color:rgba(224,92,106,.4) }
+  .del-ch-row.sel { border-color:var(--red);background:rgba(224,92,106,.07) }
+  .del-ch-check { width:15px;height:15px;accent-color:var(--red);cursor:pointer;flex-shrink:0 }
+  .del-ch-num { font-size:.7rem;color:var(--text3);white-space:nowrap;min-width:80px }
+  .del-ch-title { flex:1;font-size:.83rem }
+  .del-ch-badge { font-size:.68rem;padding:2px 7px;border-radius:10px }
+  .del-ch-badge.locked { background:rgba(200,169,110,.13);color:var(--accent) }
+  .del-ch-badge.pair { background:rgba(92,160,224,.13);color:var(--blue) }
+  .del-sel-all { font-size:.73rem;color:var(--text3);cursor:pointer;white-space:nowrap }
+  .del-sel-all:hover { color:var(--accent) }
+
+  .del-confirm {
+    background:rgba(224,92,106,.06);border:1px solid rgba(224,92,106,.3);
+    border-radius:var(--radius);padding:16px;display:none
+  }
+  .del-confirm.show { display:block }
+  .del-confirm-title { font-size:.82rem;color:var(--red);font-weight:700;margin-bottom:10px }
+  .del-confirm-list { margin-bottom:12px }
+  .del-confirm-list li { list-style:none;font-size:.78rem;color:var(--text2);line-height:1.8;padding-left:4px }
+  .del-confirm-list li::before { content:'— ';color:var(--red) }
+  .del-type-hint { font-size:.75rem;color:var(--text3);margin-bottom:6px }
+  .del-type-hint strong { color:var(--text);font-family:monospace;background:var(--bg2);padding:1px 6px;border-radius:4px }
+  .del-type-in {
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:8px 12px;font-family:'Lato',sans-serif;font-size:.85rem;
+    outline:none;margin-bottom:10px;transition:border-color .2s
+  }
+  .del-type-in:focus { border-color:var(--red) }
+  .del-type-in.ok { border-color:var(--green) }
+  .btn-danger {
+    background:rgba(224,92,106,.15);color:var(--red);border:1px solid rgba(224,92,106,.4);
+    border-radius:6px;padding:7px 16px;font-size:.82rem;font-family:'Lato',sans-serif;
+    cursor:pointer;font-weight:700;transition:all .2s;opacity:.45;pointer-events:none
+  }
+  .btn-danger.ready { opacity:1;pointer-events:all }
+  .btn-danger.ready:hover { background:rgba(224,92,106,.28);border-color:var(--red) }
+  .del-empty { font-size:.82rem;color:var(--text3);text-align:center;padding:14px 0 }
 </style>
 </head>
 <body>
@@ -236,6 +309,7 @@
     <div class="tab-item" data-tab="update-series"><span class="tab-icon">✏️</span><span class="tab-label">Update Series</span></div>
     <div class="tab-item" data-tab="hashmap"><span class="tab-icon">🗺️</span><span class="tab-label">Hash Map</span></div>
     <div class="tab-item" data-tab="quick-actions"><span class="tab-icon">⚡</span><span class="tab-label">Quick Actions</span></div>
+    <div class="tab-item" style="margin-top:auto;border-top:1px solid var(--border)" data-tab="delete"><span class="tab-icon">🗑️</span><span class="tab-label" style="color:var(--red)">Delete</span></div>
   </div>
 
   <div class="admin-content">
@@ -349,10 +423,18 @@
             <input class="form-input" id="us-chtitle" placeholder="e.g. The Demon Awakens">
           </div>
         </div>
+        <!-- Lock mode toggle -->
         <div class="toggle-row">
           <label class="toggle"><input type="checkbox" id="us-locked" onchange="onLockedToggle()"><span class="toggle-slider"></span></label>
           <span class="toggle-label">Locked chapter (behind adwall)</span>
         </div>
+
+        <!-- Pair toggle — shown when locked -->
+        <div class="toggle-row" id="us-pair-row" style="display:none;margin-left:8px;opacity:0.9">
+          <label class="toggle"><input type="checkbox" id="us-unlocks-pair" onchange="onPairToggle()"><span class="toggle-slider"></span></label>
+          <span class="toggle-label" style="font-size:0.8rem">2-for-1 — ad unlocks this chapter <strong>+ one more</strong></span>
+        </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Previous Chapter Hash (optional)</label>
@@ -360,37 +442,67 @@
           </div>
         </div>
 
-        <div class="file-drop" id="us-filedrop" onclick="document.getElementById('us-file').click()">
-          <input type="file" id="us-file" accept=".json,.txt" style="display:none" onchange="handleFileSelect(this,'us-filedrop','us-filename')">
-          <div class="file-drop-label">📄 Click or drag chapter JSON/TXT file here</div>
-          <div class="file-name" id="us-filename"></div>
+        <!-- SINGLE FILE (default) -->
+        <div id="us-single-file-section">
+          <div class="file-drop" id="us-filedrop" onclick="document.getElementById('us-file').click()">
+            <input type="file" id="us-file" accept=".json,.txt" style="display:none" onchange="handleFileSelect(this,'us-filedrop','us-filename')">
+            <div class="file-drop-label">📄 Click or drag chapter JSON/TXT file here</div>
+            <div class="file-name" id="us-filename"></div>
+          </div>
+          <div class="gen-preview show" id="us-preview">Will generate: hash=<span id="us-phash">—</span>, file=<span id="us-pfile">—</span></div>
         </div>
 
-        <div class="gen-preview show" id="us-preview">Will generate: hash=<span id="us-phash">—</span>, file=<span id="us-pfile">—</span></div>
+        <!-- PAIR FILES (shown when 2-for-1 toggled) -->
+        <div id="us-pair-file-section" style="display:none">
+          <div style="font-size:0.75rem;color:var(--text3);margin-bottom:8px">Upload both chapters — the ad will unlock both at once.</div>
 
-        <!-- STEP 1: Upload only button (shown when locked is on) -->
-        <div id="us-locked-step1" style="display:none;margin-bottom:14px">
-          <div style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">📌 <strong>Locked chapter flow:</strong> First upload the file to get your chapter URL, then set up Linkvertise, then publish.</div>
-          <button class="btn-sm" style="background:var(--blue);border-color:var(--blue);color:#0a1020;font-weight:700" id="us-upload-only-btn" onclick="uploadOnlyChapter()">📤 Step 1 — Upload File & Get Chapter Link</button>
+          <div style="font-size:0.75rem;color:var(--text2);margin-bottom:4px">📄 Chapter A <span style="color:var(--text3)">(the locked one — ad gates this)</span></div>
+          <div class="file-drop" id="us-filedrop-a" onclick="document.getElementById('us-file-a').click()" style="margin-bottom:6px">
+            <input type="file" id="us-file-a" accept=".json,.txt" style="display:none" onchange="handleFileSelect(this,'us-filedrop-a','us-filename-a')">
+            <div class="file-drop-label">📄 Click or drag Chapter A file</div>
+            <div class="file-name" id="us-filename-a"></div>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:10px">
+            Chapter: <input class="form-input" id="us-ch-a" type="number" min="1" style="display:inline-block;width:60px;padding:3px 6px;font-size:0.8rem">
+            &nbsp; Title: <input class="form-input" id="us-chtitle-a" placeholder="Chapter A title" style="display:inline-block;width:180px;padding:3px 8px;font-size:0.8rem">
+          </div>
+          <div class="gen-preview show" style="margin-bottom:12px">Will generate: hash=<span id="us-phash-a">—</span>, file=<span id="us-pfile-a">—</span></div>
+
+          <div style="font-size:0.75rem;color:var(--text2);margin-bottom:4px">📄 Chapter B <span style="color:var(--text3)">(free after ad — unlocked alongside A)</span></div>
+          <div class="file-drop" id="us-filedrop-b" onclick="document.getElementById('us-file-b').click()" style="margin-bottom:6px">
+            <input type="file" id="us-file-b" accept=".json,.txt" style="display:none" onchange="handleFileSelect(this,'us-filedrop-b','us-filename-b')">
+            <div class="file-drop-label">📄 Click or drag Chapter B file</div>
+            <div class="file-name" id="us-filename-b"></div>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:10px">
+            Chapter: <input class="form-input" id="us-ch-b" type="number" min="1" style="display:inline-block;width:60px;padding:3px 6px;font-size:0.8rem">
+            &nbsp; Title: <input class="form-input" id="us-chtitle-b" placeholder="Chapter B title" style="display:inline-block;width:180px;padding:3px 8px;font-size:0.8rem">
+          </div>
+          <div class="gen-preview show">Will generate: hash=<span id="us-phash-b">—</span>, file=<span id="us-pfile-b">—</span></div>
         </div>
 
-        <!-- STEP 2: Adwall URL input (shown after upload completes) -->
-        <div id="us-adwall-step" style="display:none;background:rgba(200,169,110,0.06);border:1px solid var(--accent);border-radius:var(--radius);padding:16px;margin-bottom:14px">
+        <!-- STEP 1: Upload both files to get Chapter A URL (locked flow) -->
+        <div id="us-locked-step1" style="display:none;margin:12px 0 0">
+          <div style="font-size:0.78rem;color:var(--text2);margin-bottom:8px">📌 Upload both files first to get the chapter link for Linkvertise, then publish.</div>
+          <button class="btn-sm" style="background:var(--blue);border-color:var(--blue);color:#0a1020;font-weight:700" id="us-upload-only-btn" onclick="uploadOnlyChapter()">📤 Step 1 — Upload & Get Chapter Link</button>
+        </div>
+
+        <!-- STEP 2: Adwall URL input -->
+        <div id="us-adwall-step" style="display:none;background:rgba(200,169,110,0.06);border:1px solid var(--accent);border-radius:var(--radius);padding:16px;margin:12px 0 0">
           <div style="font-size:0.82rem;color:var(--accent);font-weight:700;margin-bottom:8px">🔗 Step 2 — Create your Linkvertise ad</div>
-          <div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px">Copy the chapter link below → go to Linkvertise → paste it as the destination URL → copy the Linkvertise link they give you → paste it in the field below.</div>
-          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">Chapter URL (paste this into Linkvertise)</div>
+          <div style="font-size:0.78rem;color:var(--text2);margin-bottom:10px">Copy the link → paste into Linkvertise as destination → get Linkvertise link → paste below.</div>
+          <div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">Chapter URL (paste into Linkvertise)</div>
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
             <div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:monospace;font-size:0.75rem;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="us-chapter-url"></div>
             <button class="btn-sm" onclick="copyChapterUrl()" id="us-copy-btn" style="flex-shrink:0">📋 Copy</button>
           </div>
           <div style="font-size:0.72rem;color:var(--text3);margin-bottom:4px">Linkvertise Ad Link *</div>
           <input class="form-input" id="us-adwall-url" placeholder="https://linkvertise.com/123456/your-chapter" style="margin-bottom:6px">
-          <div style="font-size:0.7rem;color:var(--text3)">Paste the link Linkvertise gives you after creating the ad.</div>
         </div>
 
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
           <button class="btn-sm" onclick="generateUSPreview()">🔄 Generate IDs</button>
-          <button class="btn-sm primary" id="us-submit" onclick="submitUpdateSeries()">🚀 Publish</button>
+          <button class="btn-sm primary" id="us-submit" onclick="submitUpdateSeries()">🚀 Upload & Publish</button>
         </div>
 
         <div class="upload-progress" id="us-progress"><div class="upload-bar" id="us-bar" style="width:0%"></div></div>
@@ -452,6 +564,67 @@
       </div>
     </div>
 
+
+    <!-- ══ DELETE ══ -->
+    <div class="tab-pane" id="tab-delete">
+
+      <!-- DELETE CHAPTERS -->
+      <div class="card">
+        <div class="card-title">🗑️ Delete Chapters</div>
+
+        <div class="del-label">1 — Pick a series</div>
+        <div class="del-series-grid" id="dc-series-grid"><div class="del-empty">Click "Load" to fetch series</div></div>
+        <button class="btn-sm" style="margin-bottom:18px" onclick="dcLoadSeries()">🔄 Load Series</button>
+
+        <div id="dc-ch-section" style="display:none">
+          <div class="del-label">2 — Filter &amp; select chapters</div>
+          <div class="del-filter-row">
+            <input class="del-search" id="dc-search" placeholder="Search by title or chapter number…" oninput="dcFilter()">
+            <span class="del-sel-all" onclick="dcToggleAll()" id="dc-sel-all-btn">Select all</span>
+          </div>
+          <div class="del-pills" id="dc-pills"></div>
+          <div class="del-ch-list" id="dc-ch-list"></div>
+        </div>
+
+        <div class="del-confirm" id="dc-confirm">
+          <div class="del-confirm-title">⚠ You're about to permanently delete:</div>
+          <ul class="del-confirm-list" id="dc-confirm-list"></ul>
+          <div class="del-type-hint">Type <strong id="dc-phrase"></strong> to confirm</div>
+          <input class="del-type-in" id="dc-type" placeholder="Type the phrase above…" oninput="dcCheckPhrase()">
+          <div style="display:flex;gap:10px">
+            <button class="btn-danger" id="dc-go-btn" onclick="dcExecute()">🗑 Delete</button>
+            <button class="btn-sm" onclick="dcCancelConfirm()">Cancel</button>
+          </div>
+        </div>
+        <div class="log-box" id="dc-log" style="display:none;margin-top:12px"></div>
+      </div>
+
+      <!-- DELETE SERIES -->
+      <div class="card">
+        <div class="card-title" style="color:var(--red)">⛔ Delete Entire Series</div>
+        <p style="font-size:.8rem;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          Removes the series entry, every chapter file, all hashmap entries, and the index file.
+          <strong style="color:var(--red)">Cannot be undone.</strong>
+        </p>
+
+        <div class="del-label">Select series to delete</div>
+        <div class="del-series-grid" id="ds-series-grid"><div class="del-empty">Click "Load" to fetch series</div></div>
+        <button class="btn-sm" style="margin-bottom:18px" onclick="dsLoadSeries()">🔄 Load Series</button>
+
+        <div class="del-confirm" id="ds-confirm">
+          <div class="del-confirm-title">⛔ Permanently delete this series and ALL its data:</div>
+          <ul class="del-confirm-list" id="ds-confirm-list"></ul>
+          <div class="del-type-hint">Type the exact series title <strong id="ds-phrase"></strong> to confirm</div>
+          <input class="del-type-in" id="ds-type" placeholder="Type the series title exactly…" oninput="dsCheckPhrase()">
+          <div style="display:flex;gap:10px">
+            <button class="btn-danger" id="ds-go-btn" onclick="dsExecute()">⛔ Delete Series</button>
+            <button class="btn-sm" onclick="dsCancelConfirm()">Cancel</button>
+          </div>
+        </div>
+        <div class="log-box" id="ds-log" style="display:none;margin-top:12px"></div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -579,12 +752,7 @@ function generateNSPreview() {
   document.getElementById('ns-preview').classList.add('show');
 }
 
-function generateUSPreview() {
-  usHash = genHash(); usFile = genFilename();
-  document.getElementById('us-phash').textContent = usHash;
-  document.getElementById('us-pfile').textContent = usFile;
-  document.getElementById('us-preview').classList.add('show');
-}
+// generateUSPreview defined in LOCKED CHAPTER FLOW section above
 
 generateNSPreview();
 generateUSPreview();
@@ -598,7 +766,7 @@ document.getElementById('ns-title').addEventListener('input', e => {
 function handleFileSelect(input, dropId, nameId) {
   if (input.files[0]) document.getElementById(nameId).textContent = '✓ ' + input.files[0].name;
 }
-['ns-filedrop','us-filedrop'].forEach(id => {
+['ns-filedrop','us-filedrop','us-filedrop-a','us-filedrop-b'].forEach(id => {
   const el = document.getElementById(id);
   el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
   el.addEventListener('dragleave', () => el.classList.remove('dragover'));
@@ -691,11 +859,13 @@ async function submitNewSeries() {
     log('ns-log', 'hashmap.json updated ✓', 'ok');
     setProgress('ns-bar', 'ns-progress', 70);
 
-    // 5. Create/update chapter index
+    // 5. Create/update chapter index — fresh fetch to avoid SHA conflict
     const indexPath = `data/chapters/${id}-index.json`;
     let { data: index, sha: indexSha } = await ghGetJSON(cfg, indexPath);
     if (!index) index = { id, chapters: [] };
-    index.chapters.push({ volume: vol, chapter: chNum, title: chTitle, hash: nsHash, locked });
+    if (!index.chapters.find(c => c.hash === nsHash)) {
+      index.chapters.push({ volume: vol, chapter: chNum, title: chTitle, hash: nsHash, locked });
+    }
     await ghPutFile(cfg, indexPath, JSON.stringify(index, null, 2), `Add chapter index for ${id}`, indexSha);
     log('ns-log', 'Chapter index updated ✓', 'ok');
     setProgress('ns-bar', 'ns-progress', 85);
@@ -721,51 +891,111 @@ async function submitNewSeries() {
 }
 
 // ========== LOCKED CHAPTER FLOW ==========
-let usFileUploaded = false; // tracks if file was already uploaded in step 1
+let usFileUploaded = false;
+let usHashB = '', usFileB = '';
 
 function onLockedToggle() {
   const locked = document.getElementById('us-locked').checked;
+  const pair = locked && document.getElementById('us-unlocks-pair').checked;
+  document.getElementById('us-pair-row').style.display = locked ? 'flex' : 'none';
+  if (!locked) {
+    document.getElementById('us-unlocks-pair').checked = false;
+    document.getElementById('us-pair-file-section').style.display = 'none';
+    document.getElementById('us-single-file-section').style.display = 'block';
+  }
   document.getElementById('us-locked-step1').style.display = locked ? 'block' : 'none';
   document.getElementById('us-adwall-step').style.display = 'none';
   document.getElementById('us-submit').textContent = locked ? '🚀 Publish' : '🚀 Upload & Publish';
-  // Reset step state when toggling
   usFileUploaded = false;
   document.getElementById('us-adwall-url').value = '';
   document.getElementById('us-chapter-url').textContent = '';
+}
+
+function onPairToggle() {
+  const pair = document.getElementById('us-unlocks-pair').checked;
+  document.getElementById('us-pair-file-section').style.display = pair ? 'block' : 'none';
+  document.getElementById('us-single-file-section').style.display = pair ? 'none' : 'block';
+  usFileUploaded = false;
+  document.getElementById('us-adwall-step').style.display = 'none';
+  document.getElementById('us-locked-step1').style.display = 'block';
+  if (pair) {
+    // Pre-fill chapter B = chapter A + 1
+    const chA = parseInt(document.getElementById('us-ch').value) || 1;
+    document.getElementById('us-ch-a').value = chA;
+    document.getElementById('us-ch-b').value = chA + 1;
+    generateUSPreview();
+  }
+}
+
+function generateUSPreview() {
+  usHash = genHash(); usFile = `${usHash}.json`;
+  document.getElementById('us-phash').textContent = usHash;
+  document.getElementById('us-pfile').textContent = usFile;
+  const pair = document.getElementById('us-unlocks-pair')?.checked;
+  if (pair) {
+    usHashB = genHash(); usFileB = `${usHashB}.json`;
+    document.getElementById('us-phash-a').textContent = usHash;
+    document.getElementById('us-pfile-a').textContent = usFile;
+    document.getElementById('us-phash-b').textContent = usHashB;
+    document.getElementById('us-pfile-b').textContent = usFileB;
+  }
 }
 
 async function uploadOnlyChapter() {
   const cfg = getConfig(); if (!cfg) return;
   const seriesId = document.getElementById('us-series').value;
   if (!seriesId) { alert('Please select a series first.'); return; }
-  const fileInput = document.getElementById('us-file');
-  if (!fileInput.files[0]) { alert('Please select a chapter file first.'); return; }
-  if (!usHash) generateUSPreview();
-
   const vol = parseInt(document.getElementById('us-vol').value) || 1;
-  const chNum = parseInt(document.getElementById('us-ch').value) || 1;
-  const chTitle = document.getElementById('us-chtitle').value.trim() || `Volume ${vol} Chapter ${chNum}`;
+  const pair = document.getElementById('us-unlocks-pair').checked;
+
+  if (pair) {
+    const fileA = document.getElementById('us-file-a');
+    const fileB = document.getElementById('us-file-b');
+    if (!fileA.files[0] || !fileB.files[0]) { alert('Please select both chapter files.'); return; }
+  } else {
+    const fileInput = document.getElementById('us-file');
+    if (!fileInput.files[0]) { alert('Please select a chapter file first.'); return; }
+  }
+  if (!usHash) generateUSPreview();
 
   clearLog('us-log');
   setProgress('us-bar', 'us-progress', 10);
-  log('us-log', 'Uploading chapter file...', 'info');
   document.getElementById('us-upload-only-btn').disabled = true;
 
   try {
-    const raw = await readFile(fileInput);
-    const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId);
-    const chPath = `data/chapters/${usFile}`;
-    await ghPutFile(cfg, chPath, chapterContent, `Upload (locked) ${seriesId} ch${chNum}`);
-    setProgress('us-bar', 'us-progress', 100);
-    log('us-log', `✅ File uploaded! Now set up your Linkvertise link below.`, 'ok');
-    usFileUploaded = true;
+    if (pair) {
+      const chNumA = parseInt(document.getElementById('us-ch-a').value) || parseInt(document.getElementById('us-ch').value) || 1;
+      const chNumB = parseInt(document.getElementById('us-ch-b').value) || chNumA + 1;
+      const chTitleA = document.getElementById('us-chtitle-a').value.trim() || `Volume ${vol} Chapter ${chNumA}`;
+      const chTitleB = document.getElementById('us-chtitle-b').value.trim() || `Volume ${vol} Chapter ${chNumB}`;
 
-    // Build the chapter URL and show step 2
+      // Upload Chapter A
+      const rawA = await readFile(document.getElementById('us-file-a'));
+      await ghPutFile(cfg, `data/chapters/${usFile}`, parseChapterContent(rawA, `Volume ${vol} Chapter ${chNumA} — ${chTitleA}`, vol, chNumA, seriesId), `Upload ${seriesId} ch${chNumA}`);
+      log('us-log', `Chapter A uploaded → ${usFile} ✓`, 'ok');
+      setProgress('us-bar', 'us-progress', 50);
+
+      // Upload Chapter B
+      const rawB = await readFile(document.getElementById('us-file-b'));
+      await ghPutFile(cfg, `data/chapters/${usFileB}`, parseChapterContent(rawB, `Volume ${vol} Chapter ${chNumB} — ${chTitleB}`, vol, chNumB, seriesId), `Upload ${seriesId} ch${chNumB}`);
+      log('us-log', `Chapter B uploaded → ${usFileB} ✓`, 'ok');
+      setProgress('us-bar', 'us-progress', 100);
+    } else {
+      const chNum = parseInt(document.getElementById('us-ch').value) || 1;
+      const chTitle = document.getElementById('us-chtitle').value.trim() || `Volume ${vol} Chapter ${chNum}`;
+      const raw = await readFile(document.getElementById('us-file'));
+      await ghPutFile(cfg, `data/chapters/${usFile}`, parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId), `Upload ${seriesId} ch${chNum}`);
+      log('us-log', `Chapter uploaded → ${usFile} ✓`, 'ok');
+      setProgress('us-bar', 'us-progress', 100);
+    }
+
+    usFileUploaded = true;
     const base = `https://${cfg.owner}.github.io/${cfg.repo}`;
     const chapterUrl = `${base}/chapter.html?h=${usHash}`;
     document.getElementById('us-chapter-url').textContent = chapterUrl;
     document.getElementById('us-adwall-step').style.display = 'block';
     document.getElementById('us-locked-step1').style.display = 'none';
+    log('us-log', '✅ Files uploaded! Now set up Linkvertise below.', 'ok');
   } catch(e) {
     log('us-log', `❌ Error: ${e.message}`, 'err');
   } finally {
@@ -778,8 +1008,7 @@ function copyChapterUrl() {
   navigator.clipboard.writeText(url).then(() => {
     const btn = document.getElementById('us-copy-btn');
     btn.textContent = '✓ Copied!';
-    btn.style.color = 'var(--green)';
-    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'var(--green)'; btn.style.borderColor = 'var(--green)';
     setTimeout(() => { btn.textContent = '📋 Copy'; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
   });
 }
@@ -817,16 +1046,27 @@ async function submitUpdateSeries() {
   const seriesId = document.getElementById('us-series').value;
   if (!seriesId) { alert('Please select a series.'); return; }
   const vol = parseInt(document.getElementById('us-vol').value) || 1;
-  const chNum = parseInt(document.getElementById('us-ch').value) || 1;
-  const chTitle = document.getElementById('us-chtitle').value.trim() || `Volume ${vol} Chapter ${chNum}`;
   const locked = document.getElementById('us-locked').checked;
+  const isPair = locked && document.getElementById('us-unlocks-pair').checked;
   const prevHash = document.getElementById('us-prev').value.trim() || null;
-  const fileInput = document.getElementById('us-file');
   const adwallUrl = document.getElementById('us-adwall-url').value.trim();
 
-  if (!usFileUploaded && !fileInput.files[0]) { alert('Please select a chapter file.'); return; }
-  if (locked && !adwallUrl) { alert('Please complete Step 2: upload the file first and paste your Linkvertise link.'); return; }
+  if (locked && !adwallUrl) { alert('Please complete Step 2: upload first and paste your Linkvertise link.'); return; }
   if (!usHash) generateUSPreview();
+
+  // Validate files
+  if (isPair) {
+    if (!usFileUploaded && (!document.getElementById('us-file-a').files[0] || !document.getElementById('us-file-b').files[0]))
+      { alert('Please select both chapter files.'); return; }
+  } else {
+    if (!usFileUploaded && !document.getElementById('us-file').files[0])
+      { alert('Please select a chapter file.'); return; }
+  }
+
+  const chNumA = isPair ? (parseInt(document.getElementById('us-ch-a').value) || parseInt(document.getElementById('us-ch').value) || 1) : (parseInt(document.getElementById('us-ch').value) || 1);
+  const chNumB = isPair ? (parseInt(document.getElementById('us-ch-b').value) || chNumA + 1) : null;
+  const chTitleA = isPair ? (document.getElementById('us-chtitle-a').value.trim() || `Volume ${vol} Chapter ${chNumA}`) : (document.getElementById('us-chtitle').value.trim() || `Volume ${vol} Chapter ${chNumA}`);
+  const chTitleB = isPair ? (document.getElementById('us-chtitle-b').value.trim() || `Volume ${vol} Chapter ${chNumB}`) : null;
 
   clearLog('us-log');
   setProgress('us-bar', 'us-progress', 5);
@@ -838,57 +1078,71 @@ async function submitUpdateSeries() {
     const seriesTitle = series?.title || seriesId;
     const seriesCover = series?.cover || '';
 
-    // 1. Upload chapter file (skip if already uploaded in step 1)
+    // 1. Upload files (skip if already uploaded in step 1)
     if (!usFileUploaded) {
-      const raw = await readFile(fileInput);
-      const chapterContent = parseChapterContent(raw, `Volume ${vol} Chapter ${chNum} — ${chTitle}`, vol, chNum, seriesId);
-      const chPath = `data/chapters/${usFile}`;
-      await ghPutFile(cfg, chPath, chapterContent, `Add ${seriesId} ch${chNum}`);
-      log('us-log', `Chapter uploaded → ${usFile} ✓`, 'ok');
+      if (isPair) {
+        const rawA = await readFile(document.getElementById('us-file-a'));
+        await ghPutFile(cfg, `data/chapters/${usFile}`, parseChapterContent(rawA, `Volume ${vol} Chapter ${chNumA} — ${chTitleA}`, vol, chNumA, seriesId), `Add ${seriesId} ch${chNumA}`);
+        log('us-log', `Chapter A uploaded → ${usFile} ✓`, 'ok');
+        const rawB = await readFile(document.getElementById('us-file-b'));
+        await ghPutFile(cfg, `data/chapters/${usFileB}`, parseChapterContent(rawB, `Volume ${vol} Chapter ${chNumB} — ${chTitleB}`, vol, chNumB, seriesId), `Add ${seriesId} ch${chNumB}`);
+        log('us-log', `Chapter B uploaded → ${usFileB} ✓`, 'ok');
+      } else {
+        const raw = await readFile(document.getElementById('us-file'));
+        await ghPutFile(cfg, `data/chapters/${usFile}`, parseChapterContent(raw, `Volume ${vol} Chapter ${chNumA} — ${chTitleA}`, vol, chNumA, seriesId), `Add ${seriesId} ch${chNumA}`);
+        log('us-log', `Chapter uploaded → ${usFile} ✓`, 'ok');
+      }
     } else {
-      log('us-log', `Chapter file already uploaded → ${usFile} ✓`, 'ok');
+      log('us-log', `Files already uploaded ✓`, 'ok');
     }
-    setProgress('us-bar', 'us-progress', 25);
+    setProgress('us-bar', 'us-progress', 30);
 
-    // 2. Update hashmap — set next on previous entry
+    // 2. Update hashmap — do everything in one fetch/write
     let { data: hashmap, sha: hashmapSha } = await ghGetJSON(cfg, 'data/hashmap.json');
     if (!hashmap) hashmap = {};
 
-    // Auto-find prev hash if not provided
+    // Auto-find prev
     let actualPrev = prevHash;
     if (!actualPrev) {
-      const seriesEntries = Object.entries(hashmap).filter(([h, v]) => v.series === seriesId);
-      if (seriesEntries.length > 0) {
-        seriesEntries.sort((a,b) => (a[1].chapter||0) - (b[1].chapter||0));
-        actualPrev = seriesEntries[seriesEntries.length - 1][0];
-      }
+      const entries = Object.entries(hashmap).filter(([h, v]) => v.series === seriesId).sort((a,b) => (a[1].chapter||0)-(b[1].chapter||0));
+      if (entries.length) actualPrev = entries[entries.length - 1][0];
     }
 
-    const hashmapEntry = { series: seriesId, volume: vol, chapter: chNum, file: usFile, locked, prev: actualPrev, next: null };
-    if (locked && adwallUrl) hashmapEntry.adwallUrl = adwallUrl;
-    hashmap[usHash] = hashmapEntry;
-    if (actualPrev && hashmap[actualPrev]) { hashmap[actualPrev].next = usHash; }
-    await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Update hash: ${seriesId} ch${chNum}`, hashmapSha);
-    log('us-log', 'hashmap.json updated ✓', 'ok');
-    setProgress('us-bar', 'us-progress', 50);
+    if (isPair) {
+      // Chapter A: locked, adwall, unlocksPair
+      hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNumA, file: usFile, locked: true, adwallUrl, unlocksPair: true, prev: actualPrev, next: usHashB };
+      // Chapter B: also marked locked (so it checks localStorage) but no adwall — free after A
+      hashmap[usHashB] = { series: seriesId, volume: vol, chapter: chNumB, file: usFileB, locked: true, prev: usHash, next: null };
+      if (actualPrev && hashmap[actualPrev]) hashmap[actualPrev].next = usHash;
+    } else {
+      hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNumA, file: usFile, locked, prev: actualPrev, next: null };
+      if (locked && adwallUrl) hashmap[usHash].adwallUrl = adwallUrl;
+      if (actualPrev && hashmap[actualPrev]) hashmap[actualPrev].next = usHash;
+    }
 
-    // 3. Update chapter index
+    await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Update hash: ${seriesId}`, hashmapSha);
+    log('us-log', 'hashmap.json updated ✓', 'ok');
+    setProgress('us-bar', 'us-progress', 55);
+
+    // 3. Update chapter index (single write)
     const indexPath = `data/chapters/${seriesId}-index.json`;
     let { data: index, sha: indexSha } = await ghGetJSON(cfg, indexPath);
     if (!index) index = { id: seriesId, chapters: [] };
-    index.chapters.push({ volume: vol, chapter: chNum, title: chTitle, hash: usHash, locked });
+    if (!index.chapters.find(c => c.hash === usHash))
+      index.chapters.push({ volume: vol, chapter: chNumA, title: chTitleA, hash: usHash, locked: true });
+    if (isPair && !index.chapters.find(c => c.hash === usHashB))
+      index.chapters.push({ volume: vol, chapter: chNumB, title: chTitleB, hash: usHashB, locked: true });
     await ghPutFile(cfg, indexPath, JSON.stringify(index, null, 2), `Update chapter index: ${seriesId}`, indexSha);
     log('us-log', 'Chapter index updated ✓', 'ok');
     setProgress('us-bar', 'us-progress', 70);
 
-    // 4. Update series.json latest chapter/volume
+    // 4. Update series.json
     let { data: seriesArr, sha: seriesSha } = await ghGetJSON(cfg, 'data/series.json');
     const sIdx = seriesArr.findIndex(s => s.id === seriesId);
-    if (sIdx !== -1) {
-      if (vol > seriesArr[sIdx].latest_volume || (vol === seriesArr[sIdx].latest_volume && chNum > seriesArr[sIdx].latest_chapter)) {
-        seriesArr[sIdx].latest_volume = vol;
-        seriesArr[sIdx].latest_chapter = chNum;
-      }
+    const latestChNum = isPair ? chNumB : chNumA;
+    if (sIdx !== -1 && (vol > seriesArr[sIdx].latest_volume || (vol === seriesArr[sIdx].latest_volume && latestChNum > seriesArr[sIdx].latest_chapter))) {
+      seriesArr[sIdx].latest_volume = vol;
+      seriesArr[sIdx].latest_chapter = latestChNum;
       await ghPutFile(cfg, 'data/series.json', JSON.stringify(seriesArr, null, 2), `Update metadata: ${seriesId}`, seriesSha);
       log('us-log', 'series.json updated ✓', 'ok');
     }
@@ -897,18 +1151,21 @@ async function submitUpdateSeries() {
     // 5. Update update.json
     let { data: updates, sha: updatesSha } = await ghGetJSON(cfg, 'data/update.json');
     if (!updates) updates = [];
-    updates.unshift({ series_id: seriesId, title: seriesTitle, cover: seriesCover, reason: `Volume ${vol} Chapter ${chNum} added`, url: `/series.html?id=${seriesId}`, timestamp: new Date().toISOString() });
+    const reason = isPair ? `Vol.${vol} Ch.${chNumA} & Ch.${chNumB} added` : `Vol.${vol} Ch.${chNumA} added`;
+    updates.unshift({ series_id: seriesId, title: seriesTitle, cover: seriesCover, reason, url: `/series.html?id=${seriesId}`, timestamp: new Date().toISOString() });
     if (updates.length > 20) updates = updates.slice(0, 20);
     await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), `Update feed: ${seriesTitle}`, updatesSha);
     log('us-log', 'update.json updated ✓', 'ok');
     setProgress('us-bar', 'us-progress', 100);
 
-    log('us-log', `✅ Done! Chapter URL: chapter.html?h=${usHash}`, 'ok');
-    if (actualPrev) log('us-log', `Linked from previous: ${actualPrev}`, 'info');
+    log('us-log', isPair ? `✅ Done! Ch.${chNumA} (locked) + Ch.${chNumB} (free after ad) published.` : `✅ Done! Chapter URL: chapter.html?h=${usHash}`, 'ok');
     usFileUploaded = false;
     document.getElementById('us-adwall-step').style.display = 'none';
-    document.getElementById('us-locked-step1').style.display = document.getElementById('us-locked').checked ? 'block' : 'none';
+    document.getElementById('us-locked-step1').style.display = locked ? 'block' : 'none';
     document.getElementById('us-adwall-url').value = '';
+    document.getElementById('us-unlocks-pair').checked = false;
+    document.getElementById('us-pair-file-section').style.display = 'none';
+    document.getElementById('us-single-file-section').style.display = 'block';
     generateUSPreview();
 
   } catch(e) {
@@ -1033,6 +1290,313 @@ async function quickExportAll() {
   }
 }
 
+
+// ══════════════════════════════════════════
+// ════════════ DELETE TAB ══════════════════
+// ══════════════════════════════════════════
+
+async function ghDeleteFile(cfg, path, sha, msg) {
+  const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+    method:'DELETE',
+    headers:{ Authorization:`token ${cfg.token}`,'Content-Type':'application/json' },
+    body: JSON.stringify({ message:msg, sha, branch:cfg.branch })
+  });
+  if (!res.ok && res.status !== 404) {
+    const e = await res.json().catch(()=>({}));
+    throw new Error(`DELETE ${path}: ${res.status} — ${e.message||''}`);
+  }
+}
+
+// ── helpers ──
+function delSeriesCard(s, gridId, onClickFn, radioGroup) {
+  return `<div class="del-series-row" id="${gridId}-${s.id}" onclick="${onClickFn}('${s.id}','${s.title.replace(/'/g,"\'")}')">
+    <img class="del-series-thumb" src="${s.cover||''}" onerror="this.style.opacity=0" alt="">
+    <div class="del-series-info">
+      <div class="del-series-name">${s.title}</div>
+      <div class="del-series-sub">${s.id} · Vol.${s.latest_volume} Ch.${s.latest_chapter} · ${s.status||'—'}</div>
+    </div>
+    <input type="radio" class="del-radio" name="${radioGroup}" value="${s.id}" onclick="event.stopPropagation()">
+  </div>`;
+}
+
+// ══ DELETE CHAPTERS ══════════════════════
+let dc = { seriesId:null, hashmap:null, all:[], filtered:[], selected:new Set(), vol:'all' };
+
+async function dcLoadSeries() {
+  const cfg=getConfig(); if(!cfg) return;
+  const grid = document.getElementById('dc-series-grid');
+  grid.innerHTML = '<div class="del-empty">Loading…</div>';
+  try {
+    const {data} = await ghGetJSON(cfg,'data/series.json');
+    if (!data||!data.length) { grid.innerHTML='<div class="del-empty">No series found.</div>'; return; }
+    grid.innerHTML = data.map(s => delSeriesCard(s,'dc-row','dcSelectSeries','dc-radio')).join('');
+  } catch(e) { grid.innerHTML=`<div class="del-empty" style="color:var(--red)">${e.message}</div>`; }
+}
+
+async function dcSelectSeries(id, title) {
+  const cfg=getConfig(); if(!cfg) return;
+  // visually select
+  document.querySelectorAll('#dc-series-grid .del-series-row').forEach(r=>r.classList.remove('sel'));
+  const row = document.getElementById(`dc-row-${id}`);
+  if(row){ row.classList.add('sel'); row.querySelector('input').checked=true; }
+
+  dc.seriesId = id; dc.selected.clear();
+  document.getElementById('dc-ch-section').style.display='block';
+  document.getElementById('dc-confirm').classList.remove('show');
+  document.getElementById('dc-log').style.display='none';
+  document.getElementById('dc-ch-list').innerHTML='<div class="del-empty">Loading chapters…</div>';
+  document.getElementById('dc-pills').innerHTML='';
+
+  const {data:hashmap} = await ghGetJSON(cfg,'data/hashmap.json');
+  dc.hashmap = hashmap||{};
+  dc.all = Object.entries(dc.hashmap)
+    .filter(([h,v])=>v.series===id)
+    .map(([h,v])=>({hash:h,...v}))
+    .sort((a,b)=>a.volume-b.volume||a.chapter-b.chapter);
+  dc.vol='all'; dc.filtered=[...dc.all];
+  dcBuildPills(); dcRender();
+}
+
+function dcBuildPills() {
+  const vols=[...new Set(dc.all.map(c=>c.volume))].sort((a,b)=>a-b);
+  const bar=document.getElementById('dc-pills'); bar.innerHTML='';
+  if(vols.length<2) return;
+  const all=document.createElement('span');
+  all.className='del-pill on'; all.textContent='All Volumes';
+  all.onclick=()=>{ dc.vol='all'; dcSetPill(all); dcFilter(); };
+  bar.appendChild(all);
+  vols.forEach(v=>{
+    const p=document.createElement('span'); p.className='del-pill'; p.textContent=`Vol ${v}`;
+    p.onclick=()=>{ dc.vol=v; dcSetPill(p); dcFilter(); };
+    bar.appendChild(p);
+  });
+}
+function dcSetPill(el){ document.querySelectorAll('#dc-pills .del-pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+
+function dcFilter() {
+  const q=document.getElementById('dc-search').value.toLowerCase();
+  dc.filtered = dc.all.filter(ch=>{
+    const vm = dc.vol==='all'||ch.volume===dc.vol;
+    const tm = !q||String(ch.chapter).includes(q)||(ch.title||'').toLowerCase().includes(q);
+    return vm&&tm;
+  });
+  dcRender();
+}
+
+function dcRender() {
+  const list=document.getElementById('dc-ch-list');
+  if(!dc.filtered.length){ list.innerHTML='<div class="del-empty">No chapters match.</div>'; return; }
+  list.innerHTML = dc.filtered.map(ch=>{
+    const sel = dc.selected.has(ch.hash);
+    const badges = [
+      ch.locked && !ch.adwallUrl ? '<span class="del-ch-badge pair">pair-free</span>' : '',
+      ch.locked && ch.adwallUrl  ? '<span class="del-ch-badge locked">🔒 locked</span>' : ''
+    ].join('');
+    return `<div class="del-ch-row${sel?' sel':''}" id="dci-${ch.hash}" onclick="dcToggle('${ch.hash}')">
+      <input type="checkbox" class="del-ch-check" ${sel?'checked':''} onclick="event.stopPropagation();dcToggle('${ch.hash}')">
+      <span class="del-ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
+      <span class="del-ch-title">${ch.title||'Untitled'}</span>
+      ${badges}
+    </div>`;
+  }).join('');
+  // update select-all button text
+  const allSel = dc.filtered.every(ch=>dc.selected.has(ch.hash));
+  document.getElementById('dc-sel-all-btn').textContent = allSel?'Deselect all':'Select all';
+}
+
+function dcToggle(hash) {
+  dc.selected.has(hash) ? dc.selected.delete(hash) : dc.selected.add(hash);
+  const row=document.getElementById(`dci-${hash}`);
+  if(row){ row.classList.toggle('sel',dc.selected.has(hash)); row.querySelector('input').checked=dc.selected.has(hash); }
+  document.getElementById('dc-sel-all-btn').textContent = dc.filtered.every(ch=>dc.selected.has(ch.hash))?'Deselect all':'Select all';
+  dcUpdateConfirm();
+}
+
+function dcToggleAll() {
+  const allSel = dc.filtered.every(ch=>dc.selected.has(ch.hash));
+  dc.filtered.forEach(ch=>{ allSel ? dc.selected.delete(ch.hash) : dc.selected.add(ch.hash); });
+  dcRender(); dcUpdateConfirm();
+}
+
+function dcUpdateConfirm() {
+  const box=document.getElementById('dc-confirm');
+  if(!dc.selected.size){ box.classList.remove('show'); return; }
+  const items = dc.all.filter(ch=>dc.selected.has(ch.hash));
+  const phrase = `DELETE ${dc.selected.size}`;
+  document.getElementById('dc-phrase').textContent = phrase;
+  document.getElementById('dc-confirm-list').innerHTML = items.map(ch=>
+    `<li>Vol.${ch.volume} Ch.${ch.chapter} — ${ch.title||'Untitled'} <span style="color:var(--text3);font-size:.7rem">[${ch.hash}]</span></li>`
+  ).join('');
+  document.getElementById('dc-type').value='';
+  document.getElementById('dc-type').classList.remove('ok');
+  document.getElementById('dc-go-btn').classList.remove('ready');
+  box.classList.add('show');
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function dcCheckPhrase() {
+  const phrase=`DELETE ${dc.selected.size}`;
+  const ok=document.getElementById('dc-type').value.trim()===phrase;
+  document.getElementById('dc-type').classList.toggle('ok',ok);
+  document.getElementById('dc-go-btn').classList.toggle('ready',ok);
+}
+
+function dcCancelConfirm() {
+  dc.selected.clear(); dcRender();
+  document.getElementById('dc-confirm').classList.remove('show');
+}
+
+async function dcExecute() {
+  const cfg=getConfig(); if(!cfg) return;
+  const logBox=document.getElementById('dc-log'); logBox.style.display='block'; logBox.innerHTML='';
+  document.getElementById('dc-go-btn').disabled=true;
+  const toDelete = dc.all.filter(ch=>dc.selected.has(ch.hash));
+  const deletedSet = new Set(toDelete.map(ch=>ch.hash));
+
+  try {
+    // 1. Delete chapter files
+    for(const ch of toDelete) {
+      const f=await ghGetFile(cfg,`data/chapters/${ch.file}`);
+      if(f) { await ghDeleteFile(cfg,`data/chapters/${ch.file}`,f.sha,`Delete ${dc.seriesId} ch${ch.chapter}`); }
+      log('dc-log',`Deleted ${ch.file} ✓`,'ok');
+    }
+
+    // 2. Hashmap — single read-modify-write
+    let {data:hm,sha:hmSha}=await ghGetJSON(cfg,'data/hashmap.json');
+    toDelete.forEach(ch=>delete hm[ch.hash]);
+    // repair broken prev/next links
+    Object.values(hm).forEach(e=>{
+      if(deletedSet.has(e.prev)) e.prev=null;
+      if(deletedSet.has(e.next)) e.next=null;
+    });
+    await ghPutFile(cfg,'data/hashmap.json',JSON.stringify(hm,null,2),`Remove ${toDelete.length} chapters`,hmSha);
+    log('dc-log','hashmap.json updated ✓','ok');
+
+    // 3. Chapter index
+    const ip=`data/chapters/${dc.seriesId}-index.json`;
+    let {data:idx,sha:idxSha}=await ghGetJSON(cfg,ip);
+    if(idx){ idx.chapters=idx.chapters.filter(c=>!deletedSet.has(c.hash));
+      await ghPutFile(cfg,ip,JSON.stringify(idx,null,2),`Update index: ${dc.seriesId}`,idxSha);
+      log('dc-log','Chapter index updated ✓','ok'); }
+
+    // 4. series.json latest chapter
+    let {data:sarr,sha:sSha}=await ghGetJSON(cfg,'data/series.json');
+    const remaining=Object.values(hm).filter(v=>v.series===dc.seriesId).sort((a,b)=>b.volume-a.volume||b.chapter-a.chapter);
+    const si=sarr.findIndex(s=>s.id===dc.seriesId);
+    if(si!==-1&&remaining.length){
+      sarr[si].latest_volume=remaining[0].volume; sarr[si].latest_chapter=remaining[0].chapter;
+      await ghPutFile(cfg,'data/series.json',JSON.stringify(sarr,null,2),'Fix latest after delete',sSha);
+      log('dc-log','series.json updated ✓','ok');
+    }
+
+    log('dc-log',`✅ ${toDelete.length} chapter(s) deleted.`,'ok');
+    dc.selected.clear();
+    document.getElementById('dc-confirm').classList.remove('show');
+    await dcSelectSeries(dc.seriesId,'');  // refresh list
+  } catch(e){ log('dc-log',`❌ ${e.message}`,'err'); }
+  finally { document.getElementById('dc-go-btn').disabled=false; }
+}
+
+// ══ DELETE SERIES ════════════════════════
+let ds = { selected:null };
+
+async function dsLoadSeries() {
+  const cfg=getConfig(); if(!cfg) return;
+  const grid=document.getElementById('ds-series-grid');
+  grid.innerHTML='<div class="del-empty">Loading…</div>';
+  try {
+    const {data}=await ghGetJSON(cfg,'data/series.json');
+    if(!data||!data.length){ grid.innerHTML='<div class="del-empty">No series found.</div>'; return; }
+    grid.innerHTML = data.map(s=>delSeriesCard(s,'ds-row','dsSelectSeries','ds-radio')).join('');
+  } catch(e){ grid.innerHTML=`<div class="del-empty" style="color:var(--red)">${e.message}</div>`; }
+}
+
+async function dsSelectSeries(id, title) {
+  const cfg=getConfig(); if(!cfg) return;
+  document.querySelectorAll('#ds-series-grid .del-series-row').forEach(r=>r.classList.remove('sel'));
+  const row=document.getElementById(`ds-row-${id}`);
+  if(row){ row.classList.add('sel'); row.querySelector('input').checked=true; }
+  ds.selected={id,title};
+
+  // Count chapters
+  const {data:hm}=await ghGetJSON(cfg,'data/hashmap.json');
+  const count=Object.values(hm||{}).filter(v=>v.series===id).length;
+
+  document.getElementById('ds-confirm-list').innerHTML=`
+    <li><strong>${title}</strong> (${id})</li>
+    <li>${count} chapter file${count!==1?'s':''}</li>
+    <li>All hashmap entries for this series</li>
+    <li>Chapter index file (${id}-index.json)</li>
+    <li>Series entry from series.json</li>
+  `;
+  document.getElementById('ds-phrase').textContent=title;
+  document.getElementById('ds-type').value='';
+  document.getElementById('ds-type').classList.remove('ok');
+  document.getElementById('ds-go-btn').classList.remove('ready');
+  document.getElementById('ds-confirm').classList.add('show');
+  document.getElementById('ds-log').style.display='none';
+  document.getElementById('ds-confirm').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function dsCheckPhrase(){
+  if(!ds.selected) return;
+  const ok=document.getElementById('ds-type').value.trim()===ds.selected.title;
+  document.getElementById('ds-type').classList.toggle('ok',ok);
+  document.getElementById('ds-go-btn').classList.toggle('ready',ok);
+}
+
+function dsCancelConfirm(){
+  ds.selected=null;
+  document.querySelectorAll('#ds-series-grid .del-series-row').forEach(r=>{ r.classList.remove('sel'); r.querySelector('input').checked=false; });
+  document.getElementById('ds-confirm').classList.remove('show');
+}
+
+async function dsExecute(){
+  const cfg=getConfig(); if(!cfg||!ds.selected) return;
+  const {id,title}=ds.selected;
+  const logBox=document.getElementById('ds-log'); logBox.style.display='block'; logBox.innerHTML='';
+  document.getElementById('ds-go-btn').disabled=true;
+
+  try {
+    const {data:hm,sha:hmSha}=await ghGetJSON(cfg,'data/hashmap.json');
+    const entries=Object.entries(hm||{}).filter(([h,v])=>v.series===id);
+    log('ds-log',`Found ${entries.length} chapter(s)…`,'info');
+
+    // 1. Delete chapter files
+    for(const [hash,entry] of entries){
+      const f=await ghGetFile(cfg,`data/chapters/${entry.file}`);
+      if(f) await ghDeleteFile(cfg,`data/chapters/${entry.file}`,f.sha,`Delete series ${id}`);
+      log('ds-log',`Deleted ${entry.file} ✓`,'ok');
+    }
+
+    // 2. Hashmap
+    entries.forEach(([h])=>delete hm[h]);
+    await ghPutFile(cfg,'data/hashmap.json',JSON.stringify(hm,null,2),`Remove series ${id} from hashmap`,hmSha);
+    log('ds-log','hashmap.json updated ✓','ok');
+
+    // 3. Index file
+    const ip=`data/chapters/${id}-index.json`;
+    const idxFile=await ghGetFile(cfg,ip);
+    if(idxFile){ await ghDeleteFile(cfg,ip,idxFile.sha,`Delete index ${id}`); log('ds-log','Index file deleted ✓','ok'); }
+
+    // 4. series.json
+    const {data:sarr,sha:sSha}=await ghGetJSON(cfg,'data/series.json');
+    await ghPutFile(cfg,'data/series.json',JSON.stringify(sarr.filter(s=>s.id!==id),null,2),`Remove series: ${title}`,sSha);
+    log('ds-log','series.json updated ✓','ok');
+
+    // 5. update.json
+    const {data:upd,sha:updSha}=await ghGetJSON(cfg,'data/update.json');
+    if(upd){ await ghPutFile(cfg,'data/update.json',JSON.stringify(upd.filter(u=>u.series_id!==id),null,2),`Clean updates: ${id}`,updSha);
+      log('ds-log','update.json cleaned ✓','ok'); }
+
+    log('ds-log',`✅ Series "${title}" fully deleted.`,'ok');
+    ds.selected=null;
+    document.getElementById('ds-confirm').classList.remove('show');
+    dsLoadSeries();
+  } catch(e){ log('ds-log',`❌ ${e.message}`,'err'); }
+  finally { document.getElementById('ds-go-btn').disabled=false; }
+}
+
 // ========== TAB SWITCHING ==========
 document.querySelectorAll('.tab-item').forEach(item => {
   item.addEventListener('click', () => {
@@ -1042,6 +1606,7 @@ document.querySelectorAll('.tab-item').forEach(item => {
     document.getElementById('tab-' + item.dataset.tab).classList.add('active');
     if (item.dataset.tab === 'update-series' && document.getElementById('us-series').options.length <= 1) loadSeriesDropdown();
     if (item.dataset.tab === 'hashmap') loadHashmap();
+    if (item.dataset.tab === 'delete') { dcLoadSeries(); dsLoadSeries(); }
   });
 });
 
