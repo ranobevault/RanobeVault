@@ -6,43 +6,6 @@
     "file": "l1rhj.json",
     "locked": false,
     "prev": null,
-    "next": "HZ9VkaPUl"
-  },
-  "HZ9VkaPUl": {
-    "series": "testing",
-    "volume": 1,
-    "chapter": 2,
-    "file": "ufzha.json",
-    "locked": true,
-    "prev": "wc78Bw6bE",
-    "next": "D3pGHy75q"
-  },
-  "D3pGHy75q": {
-    "series": "testing",
-    "volume": 1,
-    "chapter": 3,
-    "file": "ce0vh.json",
-    "locked": true,
-    "prev": "HZ9VkaPUl",
-    "next": "8uqkkKVOs",
-    "adwallUrl": "https://link-target.net/718937/An3znjEPEmtk"
-  },
-  "8uqkkKVOs": {
-    "series": "testing",
-    "volume": 1,
-    "chapter": 4,
-    "file": "w62vg.json",
-    "locked": false,
-    "prev": "D3pGHy75q",
-    "next": "BsjruyTyK"
-  },
-  "BsjruyTyK": {
-    "series": "testing",
-    "volume": 1,
-    "chapter": 4,
-    "file": "umj43.json",
-    "locked": false,
-    "prev": "8uqkkKVOs",
     "next": null
   }
 }
