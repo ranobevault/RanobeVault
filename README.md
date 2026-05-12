@@ -1,4 +1,4 @@
-# NovaShelves — Static Light Novel CMS
+# RanobeVault — Static Light Novel CMS
 
 A fully static light novel reading website for GitHub Pages. No backend, no database — just JSON files and JavaScript.
 
