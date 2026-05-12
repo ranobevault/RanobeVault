@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Series — NovaShelves</title>
+<title>Series — RanobeVault</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -206,7 +206,7 @@
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
     Back
   </a>
-  <a href="index.html" class="nav-logo">✦ NovaShelves</a>
+  <a href="index.html" class="nav-logo">✦ RanobeVault</a>
 </nav>
 
 <div class="series-hero">
@@ -259,7 +259,7 @@ async function init() {
     const series = allSeries.find(s => s.id === seriesId);
     if (!series) { document.getElementById('series-title').textContent = 'Series not found'; return; }
 
-    document.title = `${series.title} — NovaShelves`;
+    document.title = `${series.title} — RanobeVault`;
     document.getElementById('series-cover').src = series.cover;
     document.getElementById('series-cover').alt = series.title;
     document.getElementById('series-title').textContent = series.title;
