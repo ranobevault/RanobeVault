@@ -211,8 +211,8 @@
 <div class="adwall-overlay" id="adwall">
   <div class="adwall-icon">🔒</div>
   <div class="adwall-title">Locked Chapter</div>
-  <div class="adwall-sub">This chapter requires unlocking.<br>Complete a quick task to gain access.</div>
-  <a class="adwall-btn" id="adwall-link" href="#">Unlock Chapter</a>
+  <div class="adwall-sub">Just a quick ad — completely free.<br>It helps keep the provider motivated to continue.</div>
+  <a class="adwall-btn" id="adwall-link" href="#">Watch/View Ad & Read Chapter</a>
   <div class="adwall-back" onclick="history.back()">← Go Back</div>
 </div>
 
@@ -386,16 +386,38 @@ function renderChapter() {
 }
 
 function showAdwall() {
+  // If already unlocked, skip adwall and load the chapter normally
+  if (hash && localStorage.getItem(`unlocked_${hash}`) === '1') {
+    // Re-run init but bypass the lock check
+    loadAndRenderChapter();
+    return;
+  }
+
   const overlay = document.getElementById('adwall');
   const link = document.getElementById('adwall-link');
-  // Use the adwallUrl stored in hashmap, fallback to a placeholder
   link.href = (currentEntry && currentEntry.adwallUrl) ? currentEntry.adwallUrl : '#';
   if (!currentEntry || !currentEntry.adwallUrl) {
     link.textContent = 'Link not configured';
     link.style.opacity = '0.5';
+  } else {
+    // Mark unlocked when they click through
+    link.onclick = () => { localStorage.setItem(`unlocked_${hash}`, '1'); };
   }
   overlay.classList.add('show');
   document.getElementById('content').innerHTML = '';
+}
+
+async function loadAndRenderChapter() {
+  try {
+    const chRes = await fetch(`data/chapters/${currentEntry.file}`);
+    if (!chRes.ok) throw new Error('Chapter file not found');
+    chapterData = await chRes.json();
+    renderChapter();
+    updateBackLink();
+    saveProgress();
+  } catch(e) {
+    showError('Failed to load chapter', e.message);
+  }
 }
 
 function updateBackLink() {

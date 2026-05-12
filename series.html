@@ -345,7 +345,12 @@ function renderChapters(chapters) {
 }
 
 async function handleLocked(hash, title) {
-  // Show modal first, then redirect on confirm
+  // If already unlocked before, go straight to chapter
+  if (localStorage.getItem(`unlocked_${hash}`) === '1') {
+    window.location.href = `chapter.html?h=${hash}`;
+    return;
+  }
+
   const backdrop = document.getElementById('unlock-backdrop');
   const chapterName = document.getElementById('unlock-chapter-name');
   const goBtn = document.getElementById('unlock-go-btn');
@@ -359,7 +364,10 @@ async function handleLocked(hash, title) {
     const res = await fetch('data/hashmap.json');
     const hashmap = await res.json();
     const entry = hashmap[hash];
-    goBtn.href = (entry && entry.adwallUrl) ? entry.adwallUrl : `chapter.html?h=${hash}`;
+    const adwallUrl = (entry && entry.adwallUrl) ? entry.adwallUrl : `chapter.html?h=${hash}`;
+    goBtn.href = adwallUrl;
+    // Mark as unlocked when they click (Linkvertise will handle the actual gate)
+    goBtn.onclick = () => { localStorage.setItem(`unlocked_${hash}`, '1'); };
   } catch(e) {
     goBtn.href = `chapter.html?h=${hash}`;
   }
@@ -392,9 +400,9 @@ init();
     <div class="unlock-modal-divider"></div>
     <div class="unlock-modal-body">
       Just a quick ad to get through — it takes less than a minute.<br><br>
-      <strong>Watching the ad helps keep this site running</strong> and lets the author know their work is appreciated. It's a small thing, but it genuinely makes a difference.
+      <strong>Watching the ad helps keep this site running</strong> and lets the provider know their work is appreciated. It's a small thing, but it genuinely makes a difference.
     </div>
-    <a class="unlock-modal-btn" id="unlock-go-btn" href="#">Watch Ad & Read Chapter →</a>
+    <a class="unlock-modal-btn" id="unlock-go-btn" href="#">Watch/View Ad & Read Chapter →</a>
     <button class="unlock-modal-cancel" onclick="closeUnlockModal()">Maybe later</button>
   </div>
 </div>
