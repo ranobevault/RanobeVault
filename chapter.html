@@ -400,8 +400,10 @@ function showAdwall() {
     link.textContent = 'Link not configured';
     link.style.opacity = '0.5';
   } else {
-    // Mark unlocked when they click through
-    link.onclick = () => { localStorage.setItem(`unlocked_${hash}`, '1'); };
+    // Set unlock flag immediately on click before Linkvertise redirect
+    link.addEventListener('click', () => {
+      localStorage.setItem(`unlocked_${hash}`, '1');
+    }, { once: true });
   }
   overlay.classList.add('show');
   document.getElementById('content').innerHTML = '';

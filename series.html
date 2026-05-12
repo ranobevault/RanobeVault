@@ -121,6 +121,8 @@
   }
   .ch-badge.free { background: rgba(92,224,160,0.12); color: var(--green); }
   .ch-badge.locked { background: rgba(200,169,110,0.13); color: var(--accent); }
+  .ch-badge.unlocked { background: rgba(92,224,160,0.13); color: var(--green); }
+  .chapter-item.already-unlocked { cursor: pointer; }
   .ch-lock-icon { flex-shrink: 0; color: var(--red); font-size: 0.75rem; }
 
   .loading { text-align: center; padding: 40px; color: var(--text3); font-size: 0.9rem; }
@@ -330,6 +332,14 @@ function renderChapters(chapters) {
   if (!chapters.length) { list.innerHTML = '<div class="loading">No chapters found.</div>'; return; }
   list.innerHTML = chapters.map(ch => {
     if (ch.locked) {
+      const alreadyUnlocked = localStorage.getItem(`unlocked_${ch.hash}`) === '1';
+      if (alreadyUnlocked) {
+        return `<a class="chapter-item already-unlocked" href="chapter.html?h=${ch.hash}">
+          <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
+          <span class="ch-title">${ch.title}</span>
+          <span class="ch-badge unlocked">✓ Unlocked</span>
+        </a>`;
+      }
       return `<div class="chapter-item locked" onclick="handleLocked('${ch.hash}','${ch.title}')">
         <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
         <span class="ch-title">${ch.title}</span>
@@ -366,8 +376,10 @@ async function handleLocked(hash, title) {
     const entry = hashmap[hash];
     const adwallUrl = (entry && entry.adwallUrl) ? entry.adwallUrl : `chapter.html?h=${hash}`;
     goBtn.href = adwallUrl;
-    // Mark as unlocked when they click (Linkvertise will handle the actual gate)
-    goBtn.onclick = () => { localStorage.setItem(`unlocked_${hash}`, '1'); };
+    // Set unlock flag immediately on click — before Linkvertise redirect
+    goBtn.addEventListener('click', () => {
+      localStorage.setItem(`unlocked_${hash}`, '1');
+    }, { once: true });
   } catch(e) {
     goBtn.href = `chapter.html?h=${hash}`;
   }
