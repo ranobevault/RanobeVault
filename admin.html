@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — RanobeVault</title>
+<title>Admin Panel — NovaShelves</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -281,7 +281,7 @@
 
 <div class="topbar">
   <div>
-    <div class="topbar-logo">✦ RanobeVault Admin</div>
+    <div class="topbar-logo">✦ NovaShelves Admin</div>
     <div class="topbar-sub">Static CMS Panel</div>
   </div>
   <div class="topbar-sep"></div>
@@ -873,7 +873,7 @@ async function submitNewSeries() {
     // 6. Update update.json
     let { data: updates, sha: updatesSha } = await ghGetJSON(cfg, 'data/update.json');
     if (!updates) updates = [];
-    updates.unshift({ series_id: id, title, cover, reason: `Volume ${vol} Chapter ${chNum} added`, url: `/series.html?id=${id}`, timestamp: new Date().toISOString() });
+    updates.unshift({ series_id: id, title, cover, reason: `Volume ${vol} Chapter ${chNum} added`, url: `series.html?id=${id}`, timestamp: new Date().toISOString() });
     if (updates.length > 20) updates = updates.slice(0, 20);
     await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), `Update feed: ${title}`, updatesSha);
     log('ns-log', 'update.json updated ✓', 'ok');
@@ -1152,7 +1152,7 @@ async function submitUpdateSeries() {
     let { data: updates, sha: updatesSha } = await ghGetJSON(cfg, 'data/update.json');
     if (!updates) updates = [];
     const reason = isPair ? `Vol.${vol} Ch.${chNumA} & Ch.${chNumB} added` : `Vol.${vol} Ch.${chNumA} added`;
-    updates.unshift({ series_id: seriesId, title: seriesTitle, cover: seriesCover, reason, url: `/series.html?id=${seriesId}`, timestamp: new Date().toISOString() });
+    updates.unshift({ series_id: seriesId, title: seriesTitle, cover: seriesCover, reason, url: `series.html?id=${seriesId}`, timestamp: new Date().toISOString() });
     if (updates.length > 20) updates = updates.slice(0, 20);
     await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), `Update feed: ${seriesTitle}`, updatesSha);
     log('us-log', 'update.json updated ✓', 'ok');
@@ -1243,7 +1243,7 @@ async function quickRebuildUpdate() {
     const updates = (series || []).map(s => ({
       series_id: s.id, title: s.title, cover: s.cover,
       reason: `Volume ${s.latest_volume} Chapter ${s.latest_chapter}`,
-      url: `/series.html?id=${s.id}`, timestamp: new Date().toISOString()
+      url: `series.html?id=${s.id}`, timestamp: new Date().toISOString()
     }));
     const { sha: updSha } = await ghGetJSON(cfg, 'data/update.json');
     await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), 'Rebuild update feed', updSha);

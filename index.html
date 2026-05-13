@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RanobeVault — Light Novel Library</title>
+<title>NovaShelves — Light Novel Library</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -230,7 +230,7 @@
 <body>
 
 <nav>
-  <a href="/" class="nav-logo">✦ RanobeVault</a>
+  <a href="/" class="nav-logo">✦ NovaShelves</a>
   <div class="nav-search">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input type="text" id="search-input" placeholder="Search novels...">
@@ -240,7 +240,7 @@
 </nav>
 
 <div class="hero">
-  <h1>RanobeVault</h1>
+  <h1>NovaShelves</h1>
   <p>Your sanctuary for light novels</p>
 </div>
 
@@ -277,7 +277,7 @@
 </div>
 
 <footer>
-  <p>RanobeVault &mdash; Static Novel Platform</p>
+  <p>NovaShelves &mdash; Static Novel Platform</p>
 </footer>
 
 <script>
@@ -349,7 +349,7 @@ async function loadUpdates() {
     const updates = await r.json();
     const list = document.getElementById('update-list');
     list.innerHTML = updates.slice(0,6).map(u => `
-      <a class="update-card" href="${u.url}">
+      <a class="update-card" href="${u.url.replace(/^\//, '')}">
         <img class="update-thumb" src="${u.cover||''}" alt="${u.title}" onerror="this.style.background='#252538'" loading="lazy">
         <div class="update-info">
           <div class="update-title">${u.title}</div>
