@@ -479,7 +479,7 @@ function renderChapter() {
               <div class="nav-ch-title">Ch. ${nextEntry.chapter}</div>
              </a>`
           : nextEntry && nextEntry.locked
-          ? `<span class="nav-chapter-btn" onclick="showAdwall()" style="cursor:pointer">
+          ? `<span class="nav-chapter-btn" onclick="showAdwall(hashmapData['${entry.next}'],'${entry.next}')" style="cursor:pointer">
               <div class="nav-label">Next ▶</div>
               <div class="nav-ch-title">✦ Read for Free</div>
              </span>`
@@ -500,24 +500,30 @@ function renderChapter() {
   applyFontSize();
 }
 
-function showAdwall() {
-  // If already unlocked, skip adwall and load the chapter normally
-  if (hash && localStorage.getItem(`unlocked_${hash}`) === '1') {
-    // Re-run init but bypass the lock check
+function showAdwall(targetEntry, targetHash) {
+  // targetEntry/targetHash: when triggered from next-chapter nav button
+  // falls back to currentEntry/hash when triggered because current chapter is locked
+  const entry = targetEntry || currentEntry;
+  const entryHash = targetHash || hash;
+
+  // If already unlocked, navigate directly
+  if (entryHash && localStorage.getItem('unlocked_' + entryHash) === '1') {
+    if (targetHash) { window.location.href = 'chapter.html?h=' + targetHash; return; }
     loadAndRenderChapter();
     return;
   }
 
   const overlay = document.getElementById('adwall');
   const link = document.getElementById('adwall-link');
-  link.href = (currentEntry && currentEntry.adwallUrl) ? currentEntry.adwallUrl : '#';
-  if (!currentEntry || !currentEntry.adwallUrl) {
+  link.href = (entry && entry.adwallUrl) ? entry.adwallUrl : '#';
+  if (!entry || !entry.adwallUrl) {
     link.textContent = 'Link not configured';
     link.style.opacity = '0.5';
   } else {
-    // Set unlock flag immediately on click before Linkvertise redirect
-    link.addEventListener('click', () => {
-      localStorage.setItem(`unlocked_${hash}`, '1');
+    link.style.opacity = '';
+    link.textContent = 'View Ad & Continue Reading';
+    link.addEventListener('click', function() {
+      localStorage.setItem('unlocked_' + entryHash, '1');
     }, { once: true });
   }
   overlay.classList.add('show');
