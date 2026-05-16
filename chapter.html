@@ -283,10 +283,10 @@
 
 <!-- ADWALL OVERLAY -->
 <div class="adwall-overlay" id="adwall">
-  <div class="adwall-icon">🔒</div>
-  <div class="adwall-title">Locked Chapter</div>
-  <div class="adwall-sub">Just a quick ad — completely free.<br>It helps keep the provider motivated to continue.</div>
-  <a class="adwall-btn" id="adwall-link" href="#">Watch/View Ad & Read Chapter</a>
+  <div class="adwall-icon">📖</div>
+  <div class="adwall-title">Next Chapter</div>
+  <div class="adwall-sub">This chapter is free — just a quick ad to help keep translations going.<br>Thanks for the support!</div>
+  <a class="adwall-btn" id="adwall-link" href="#">View Ad & Continue Reading</a>
   <div class="adwall-back" onclick="history.back()">← Go Back</div>
 </div>
 
@@ -481,7 +481,7 @@ function renderChapter() {
           : nextEntry && nextEntry.locked
           ? `<span class="nav-chapter-btn" onclick="showAdwall()" style="cursor:pointer">
               <div class="nav-label">Next ▶</div>
-              <div class="nav-ch-title">🔒 Locked</div>
+              <div class="nav-ch-title">✦ Read for Free</div>
              </span>`
           : `<span class="nav-chapter-btn disabled"><div class="nav-label">Next ▶</div><div class="nav-ch-title">Latest</div></span>`
         }
