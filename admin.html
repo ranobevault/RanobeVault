@@ -1325,7 +1325,7 @@ async function submitUpdateSeries() {
     let { data: index, sha: indexSha } = await ghGetJSON(cfg, indexPath);
     if (!index) index = { id: seriesId, chapters: [] };
     if (!index.chapters.find(c => c.hash === usHash))
-      index.chapters.push({ volume: vol, chapter: chNumA, title: chTitleA, hash: usHash, locked: true });
+      index.chapters.push({ volume: vol, chapter: chNumA, title: chTitleA, hash: usHash, locked: isPair ? true : locked });
     if (isPair && !index.chapters.find(c => c.hash === usHashB))
       index.chapters.push({ volume: vol, chapter: chNumB, title: chTitleB, hash: usHashB, locked: true });
     await ghPutFile(cfg, indexPath, JSON.stringify(index, null, 2), `Update chapter index: ${seriesId}`, indexSha);
@@ -2038,6 +2038,19 @@ async function dcExecute() {
       log('dc-log','series.json updated ✓','ok');
     }
 
+    // 5. Clean update.json — remove entries that reference deleted chapter hashes
+    // (update.json doesn't store hashes directly, so we remove by series+chapter match)
+    let {data:upd,sha:updSha}=await ghGetJSON(cfg,'data/update.json');
+    if(upd){
+      const deletedChNums=new Set(toDelete.map(ch=>ch.chapter));
+      const before=upd.length;
+      upd=upd.filter(u=>!(u.series_id===dc.seriesId && toDelete.some(ch=>u.reason&&u.reason.includes(`Ch.${ch.chapter}`))));
+      if(upd.length!==before){
+        await ghPutFile(cfg,'data/update.json',JSON.stringify(upd,null,2),`Clean updates after delete`,updSha);
+        log('dc-log','update.json cleaned ✓','ok');
+      }
+    }
+
     log('dc-log',`✅ ${toDelete.length} chapter(s) deleted.`,'ok');
     dc.selected.clear();
     document.getElementById('dc-confirm').classList.remove('show');
@@ -2156,7 +2169,6 @@ document.querySelectorAll('.tab-item').forEach(item => {
     if (item.dataset.tab === 'update-series' && document.getElementById('us-series').options.length <= 1) loadSeriesDropdown();
     if (item.dataset.tab === 'hashmap') loadHashmap();
     if (item.dataset.tab === 'batch-upload') batchInitTab();
-    if (item.dataset.tab === 'delete') { dcLoadSeries(); dsLoadSeries(); }
     if (item.dataset.tab === 'delete') { dcLoadSeries(); dsLoadSeries(); }
   });
 });
