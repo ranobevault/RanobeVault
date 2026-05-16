@@ -337,18 +337,10 @@ function renderChapters(chapters) {
   if (!chapters.length) { list.innerHTML = '<div class="loading">No chapters found.</div>'; return; }
   list.innerHTML = chapters.map(ch => {
     if (ch.locked) {
-      const alreadyUnlocked = localStorage.getItem(`unlocked_${ch.hash}`) === '1';
-      if (alreadyUnlocked) {
-        return `<a class="chapter-item already-unlocked" href="chapter.html?h=${ch.hash}">
-          <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
-          <span class="ch-title">${ch.title}</span>
-          <span class="ch-badge unlocked">✓ Unlocked</span>
-        </a>`;
-      }
-      return `<div class="chapter-item locked" onclick="handleLocked('${ch.hash}','${ch.title}')">
+      return `<div class="chapter-item locked" data-hash="${ch.hash}" data-title="${ch.title.replace(/"/g,'&quot;')}" onclick="handleLocked(this.dataset.hash,this.dataset.title)">
         <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
         <span class="ch-title">${ch.title}</span>
-        <span class="ch-badge locked">✦ Unlock Free</span>
+        <span class="ch-badge locked">✦ Read for Free</span>
       </div>`;
     }
     return `<a class="chapter-item" href="chapter.html?h=${ch.hash}">
@@ -360,57 +352,35 @@ function renderChapters(chapters) {
 }
 
 async function handleLocked(hash, title) {
-  // If already unlocked before, go straight to chapter
-  if (localStorage.getItem(`unlocked_${hash}`) === '1') {
-    window.location.href = `chapter.html?h=${hash}`;
-    return;
-  }
-
-  const backdrop = document.getElementById('unlock-backdrop');
-  const chapterName = document.getElementById('unlock-chapter-name');
-  const goBtn = document.getElementById('unlock-go-btn');
-  const modalBody = document.getElementById('unlock-modal-body');
-
-  chapterName.textContent = title;
-  goBtn.href = '#';
-  goBtn.textContent = 'Watch/View Ad & Read Chapter →';
-  modalBody.innerHTML = `Just a quick ad to get through — it takes less than a minute.<br><br>
-    <strong>Watching the ad helps keep this site running</strong> and lets the provider know their work is appreciated. It's a small thing, but it genuinely makes a difference.`;
-  backdrop.classList.add('show');
-
   try {
     const res = await fetch('data/hashmap.json');
     const hashmap = await res.json();
     const entry = hashmap[hash];
-    const adwallUrl = (entry && entry.adwallUrl) ? entry.adwallUrl : `chapter.html?h=${hash}`;
-    goBtn.href = adwallUrl;
+    const adwallUrl = (entry && entry.adwallUrl) ? entry.adwallUrl : null;
 
-    // Check if this unlocks a pair (current + next chapter)
-    const nextHash = entry && entry.next;
-    const nextEntry = nextHash && hashmap[nextHash];
-    const isPair = entry && entry.unlocksPair && nextHash && nextEntry;
-
-    if (isPair) {
-      const nextTitle = nextEntry.title || `Ch.${nextEntry.chapter}`;
-      modalBody.innerHTML = `Just a quick ad — and it's a good deal too.<br><br>
-        <strong>One ad unlocks this chapter AND the next one</strong> (${nextTitle}) for free. No extra steps.<br><br>
-        <span style="color:var(--text3);font-size:0.85em">Watching the ad supports the provider and keeps the site going.</span>`;
-      goBtn.textContent = 'Watch Ad & Unlock 2 Chapters →';
+    if (!adwallUrl) {
+      Swal.fire({ title: 'Link not configured', text: 'The ad link for this chapter has not been set up yet.', icon: 'warning', customClass: { popup: 'ranobe-alert' } });
+      return;
     }
 
-    goBtn.addEventListener('click', () => {
-      localStorage.setItem(`unlocked_${hash}`, '1');
-      if (isPair && nextHash) localStorage.setItem(`unlocked_${nextHash}`, '1');
-    }, { once: true });
+    Swal.fire({
+      customClass: { popup: 'ranobe-alert' },
+      title: title,
+      html: `This chapter is <strong>free</strong> — just a quick ad to support the translations.<br><br>
+             <span style="color:var(--accent);font-size:0.9em">💡 Bookmark the chapter page after the ad so you can come back anytime!</span>`,
+      icon: 'info',
+      confirmButtonText: '📖 Read Chapter →',
+      showCancelButton: true,
+      cancelButtonText: 'Maybe later',
+    }).then(result => {
+      if (result.isConfirmed) window.location.href = adwallUrl;
+    });
   } catch(e) {
-    goBtn.href = `chapter.html?h=${hash}`;
+    Swal.fire({ title: 'Error', text: 'Could not load chapter info. Try again.', icon: 'error', customClass: { popup: 'ranobe-alert' } });
   }
 }
 
-function closeUnlockModal(e) {
-  if (e && e.target !== document.getElementById('unlock-backdrop')) return;
-  document.getElementById('unlock-backdrop').classList.remove('show');
-}
+
 
 function checkContinue(chapters) {
   const saved = localStorage.getItem(`continue_${seriesId}`);
@@ -425,21 +395,6 @@ function checkContinue(chapters) {
 init();
 </script>
 
-<!-- UNLOCK MODAL -->
-<div class="unlock-modal-backdrop" id="unlock-backdrop" onclick="closeUnlockModal(event)">
-  <div class="unlock-modal">
-    <span class="unlock-modal-icon">✦</span>
-    <div class="unlock-modal-title">This Chapter is Free to Unlock</div>
-    <div class="unlock-modal-chapter" id="unlock-chapter-name"></div>
-    <div class="unlock-modal-divider"></div>
-    <div class="unlock-modal-body" id="unlock-modal-body">
-      Just a quick ad to get through — it takes less than a minute.<br><br>
-      <strong>Watching the ad helps keep this site running</strong> and lets the provider know their work is appreciated. It's a small thing, but it genuinely makes a difference.
-    </div>
-    <a class="unlock-modal-btn" id="unlock-go-btn" href="#">Watch/View Ad & Read Chapter →</a>
-    <button class="unlock-modal-cancel" onclick="closeUnlockModal()">Maybe later</button>
-  </div>
-</div>
 
 </body>
 </html>
