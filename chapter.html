@@ -729,21 +729,62 @@ init();
   }, true);
 
   // ── 8. Devtools detection (size change heuristic) ────────────
+  // NOTE: This uses window size difference as a heuristic. It can false-positive
+  // on browsers with large toolbars, sidebars, or zoomed-out displays.
+  // We use a generous threshold + a confirmation delay to avoid bothering readers.
   let devtoolsOpen = false;
-  const threshold = 160;
+  const threshold = 300; // raised to reduce false positives from browser UI chrome
+  let devtoolsConfirmCount = 0; // require consistent detection before alerting
+
   setInterval(function() {
     const widthDiff  = window.outerWidth  - window.innerWidth;
     const heightDiff = window.outerHeight - window.innerHeight;
-    if ((widthDiff > threshold || heightDiff > threshold) && !devtoolsOpen) {
-      devtoolsOpen = true;
-      // Blur the chapter body content as a soft deterrent
-      const body = document.querySelector('.chapter-body');
-      if (body) body.style.filter = 'blur(6px)';
-      fireAlert('Developer tools detected. Content is blurred for protection.');
-    } else if (widthDiff <= threshold && heightDiff <= threshold && devtoolsOpen) {
-      devtoolsOpen = false;
-      const body = document.querySelector('.chapter-body');
-      if (body) body.style.filter = '';
+    const likelyOpen = widthDiff > threshold || heightDiff > threshold;
+
+    if (likelyOpen && !devtoolsOpen) {
+      devtoolsConfirmCount++;
+      // Only trigger after 3 consecutive checks (~3s) to avoid brief resize false-fires
+      if (devtoolsConfirmCount >= 3) {
+        devtoolsOpen = true;
+        devtoolsConfirmCount = 0;
+        const body = document.querySelector('.chapter-body');
+        if (body) body.style.filter = 'blur(6px)';
+
+        // Show a friendly, non-accusatory notice
+        if (alertShowing) return;
+        alertShowing = true;
+        Swal.fire({
+          customClass: { popup: 'ranobe-alert' },
+          title: '⚠ Just a heads-up!',
+          html: `
+            <span style="font-size:1.3rem;display:block;margin-bottom:10px">🛠️</span>
+            <span style="color:#e8e6f0">It looks like your browser window is unusually narrow or a panel is open.</span>
+            <br><br>
+            <span style="color:#a09dbb;font-size:0.82rem">
+              If you're just reading — no worries! This can also trigger from:<br>
+              <span style="color:#c8a96e">• Browser sidebar or extensions panel</span><br>
+              <span style="color:#c8a96e">• Zoomed-out display or small screen</span><br>
+              <span style="color:#c8a96e">• Split-screen / windowed browsing</span><br><br>
+              Simply close any side panels or go fullscreen and the content will restore.
+            </span>`,
+          icon: 'warning',
+          confirmButtonText: '✓ Got it, close panels',
+          showClass: { popup: 'animate__animated animate__fadeInDown animate__faster' },
+          hideClass: { popup: 'animate__animated animate__fadeOutUp animate__faster' },
+          allowOutsideClick: true,
+          backdrop: 'rgba(10,10,16,0.7)',
+          willClose: () => {
+            alertShowing = false;
+          }
+        });
+      }
+    } else if (!likelyOpen) {
+      devtoolsConfirmCount = 0;
+      if (devtoolsOpen) {
+        devtoolsOpen = false;
+        const body = document.querySelector('.chapter-body');
+        if (body) body.style.filter = '';
+      }
     }
   }, 1000);
 
