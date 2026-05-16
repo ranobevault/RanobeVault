@@ -124,6 +124,19 @@
   }
   .chapter-divider span { font-size: 0.7rem; letter-spacing: 0.15em; }
 
+  .chapter-illustration {
+    margin: 2em -20px;
+    text-align: center;
+  }
+  .chapter-illustration img {
+    max-width: 100%;
+    width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 4px;
+    display: block;
+    margin: 0 auto;
+  }
   .chapter-body p {
     font-family: 'Crimson Pro', Georgia, serif;
     font-size: var(--font-size);
@@ -322,6 +335,13 @@ function renderChapter() {
     let inCode = false;
 
     paragraphs.forEach(para => {
+      // Illustration support: lines starting with [img] render as full-width images
+      if (para.startsWith('[img]')) {
+        if (inCode) { html += `<pre>${codeBuffer.join('\n')}</pre>`; codeBuffer = []; inCode = false; }
+        const url = para.slice(5).trim();
+        html += `<figure class="chapter-illustration"><img src="${url}" alt="Illustration" loading="lazy" onerror="this.parentElement.style.display='none'"></figure>`;
+        return;
+      }
       const isCode = para.startsWith('>') || para.startsWith('spell ') || para.startsWith('//') || para.startsWith('NAME:') || para.startsWith('SYSTEM');
       if (isCode) {
         codeBuffer.push(para.replace(/</g,'&lt;').replace(/>/g,'&gt;'));

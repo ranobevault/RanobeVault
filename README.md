@@ -66,6 +66,43 @@ The admin will automatically update all JSON files.
 **Plain text format (.txt):**
 Just write paragraphs separated by blank lines. The admin will convert it automatically.
 
+### Adding Illustrations
+
+Light novel illustrations are embedded inline inside the `content` array using the `[img]` prefix. Place the line wherever you want the image to appear between paragraphs:
+
+```json
+{
+  "title": "Volume 1 Chapter 1 — Prologue",
+  "volume": 1,
+  "chapter": 1,
+  "series": "your-series-id",
+  "content": [
+    "Paragraph one goes here.",
+    "[img]https://your-cdn.com/vol1-ch1-illustration.jpg",
+    "Paragraph two goes here."
+  ]
+}
+```
+
+- The `[img]` prefix is immediately followed by a direct image URL — no space between them
+- You can place multiple illustrations anywhere in the content array
+- If an image URL is broken or unreachable, it silently disappears — it won't break the chapter
+- Works with any image host: Cloudinary, Imgur, GitHub raw, your own CDN, etc.
+
+**Typical placement for light novels:**
+
+```json
+"content": [
+  "[img]https://cdn.example.com/vol1-color-insert.jpg",
+  "First paragraph after the color insert...",
+  "More story...",
+  "[img]https://cdn.example.com/vol1-ch1-scene.jpg",
+  "Paragraph that follows the scene illustration..."
+]
+```
+
+Color pages usually go at the very top (before any text). In-chapter scene illustrations go between the paragraphs they depict.
+
 ## Adwall Setup
 
 In `series.html`, find `handleLocked()` and update the URL:
