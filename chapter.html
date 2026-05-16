@@ -347,7 +347,8 @@ async function init() {
       return;
     }
 
-    if (currentEntry.locked) {
+    const refUnlocked = params.get('ref') === 'unlocked';
+    if (currentEntry.locked && !refUnlocked) {
       showAdwall();
       return;
     }
