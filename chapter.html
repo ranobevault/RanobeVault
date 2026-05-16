@@ -353,11 +353,7 @@ async function init() {
       return;
     }
 
-    if (currentEntry.locked && !params.get('unlocked')) {
-      if (currentEntry.adwallUrl) window.location.href = currentEntry.adwallUrl;
-      else showError('Chapter Locked', 'No ad link configured for this chapter yet.');
-      return;
-    }
+
 
     // Load chapter JSON
     const chRes = await fetch(`data/chapters/${currentEntry.file}`);
