@@ -240,6 +240,9 @@
     <span class="section-title">Chapters</span>
     <span id="ch-count" style="font-size:0.8rem;color:var(--text3)"></span>
   </div>
+  <div id="ad-notice" style="display:none;font-size:0.8rem;color:var(--text3);margin:6px 0 10px;padding:7px 12px;border-left:2px solid var(--accent);background:rgba(200,169,110,0.06)">
+    📢 Locked chapters are free — a short ad is required to access them.
+  </div>
   <div class="vol-filter" id="vol-filter"></div>
   <div class="chapter-list" id="chapter-list">
     <div class="loading dot-anim">Loading</div>
@@ -333,15 +336,17 @@ function setActive(el) {
 
 function renderChapters(chapters) {
   const list = document.getElementById('chapter-list');
+  const notice = document.getElementById('ad-notice');
+  if (notice) notice.style.display = chapters.some(c => c.locked) ? 'block' : 'none';
   document.getElementById('ch-count').textContent = `${chapters.length} chapter${chapters.length!==1?'s':''}`;
   if (!chapters.length) { list.innerHTML = '<div class="loading">No chapters found.</div>'; return; }
   list.innerHTML = chapters.map(ch => {
     if (ch.locked) {
-      return `<div class="chapter-item locked" data-hash="${ch.hash}" data-title="${ch.title.replace(/"/g,'&quot;')}" onclick="handleLocked(this.dataset.hash,this.dataset.title)">
+      return `<a class="chapter-item locked" href="javascript:void(0)" data-hash="${ch.hash}" data-title="${ch.title.replace(/"/g,'&quot;')}" onclick="handleLocked(this.dataset.hash,this.dataset.title)">
         <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
         <span class="ch-title">${ch.title}</span>
-        <span class="ch-badge locked">✦ Read for Free</span>
-      </div>`;
+        <span class="ch-badge locked">Free via Ad</span>
+      </a>`;
     }
     return `<a class="chapter-item" href="chapter.html?h=${ch.hash}">
       <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
@@ -356,28 +361,9 @@ async function handleLocked(hash, title) {
     const res = await fetch('data/hashmap.json');
     const hashmap = await res.json();
     const entry = hashmap[hash];
-    const adwallUrl = (entry && entry.adwallUrl) ? entry.adwallUrl : null;
-
-    if (!adwallUrl) {
-      Swal.fire({ title: 'Link not configured', text: 'The ad link for this chapter has not been set up yet.', icon: 'warning', customClass: { popup: 'ranobe-alert' } });
-      return;
-    }
-
-    Swal.fire({
-      customClass: { popup: 'ranobe-alert' },
-      title: title,
-      html: `This chapter is <strong>free</strong> — just a quick ad to support the translations.<br><br>
-             <span style="color:var(--accent);font-size:0.9em">💡 Bookmark the chapter page after the ad so you can come back anytime!</span>`,
-      icon: 'info',
-      confirmButtonText: '📖 Read Chapter →',
-      showCancelButton: true,
-      cancelButtonText: 'Maybe later',
-    }).then(result => {
-      if (result.isConfirmed) window.location.href = adwallUrl;
-    });
-  } catch(e) {
-    Swal.fire({ title: 'Error', text: 'Could not load chapter info. Try again.', icon: 'error', customClass: { popup: 'ranobe-alert' } });
-  }
+    const adwallUrl = entry && entry.adwallUrl;
+    if (adwallUrl) window.location.href = adwallUrl;
+  } catch(e) {}
 }
 
 
