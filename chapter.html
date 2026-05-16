@@ -282,7 +282,13 @@
 <body>
 
 <!-- ADWALL OVERLAY -->
-
+<div class="adwall-overlay" id="adwall">
+  <div class="adwall-icon">🔒</div>
+  <div class="adwall-title">Locked Chapter</div>
+  <div class="adwall-sub">Just a quick ad — completely free.<br>It helps keep the provider motivated to continue.</div>
+  <a class="adwall-btn" id="adwall-link" href="#">Watch/View Ad & Read Chapter</a>
+  <div class="adwall-back" onclick="history.back()">← Go Back</div>
+</div>
 
 <div class="top-bar">
   <a class="back-btn" id="back-link" href="index.html">
@@ -347,9 +353,9 @@ async function init() {
       return;
     }
 
-    const refUnlocked = params.get('ref') === 'unlocked';
-    if (currentEntry.locked && !refUnlocked) {
-      showAdwall();
+    if (currentEntry.locked && !params.get('unlocked')) {
+      if (currentEntry.adwallUrl) window.location.href = currentEntry.adwallUrl;
+      else showError('Chapter Locked', 'No ad link configured for this chapter yet.');
       return;
     }
 
@@ -456,7 +462,6 @@ function renderChapter() {
         <div class="chapter-divider"><span>✦ ✦ ✦</span></div>
       </div>
       <div class="chapter-body">${processContent(d.content || [])}</div>
-      ${nextEntry && nextEntry.locked ? '<div style="text-align:center;font-size:0.78rem;color:var(--text3);margin-bottom:8px;padding:6px 12px;border-left:2px solid var(--accent);background:rgba(200,169,110,0.06);max-width:500px;margin-left:auto;margin-right:auto">📢 Next chapter is free — a short ad is required to access it.</div>' : ''}
       <div class="chapter-nav">
         ${prevEntry
           ? `<a class="nav-chapter-btn" href="chapter.html?h=${entry.prev}">
@@ -475,10 +480,10 @@ function renderChapter() {
               <div class="nav-ch-title">Ch. ${nextEntry.chapter}</div>
              </a>`
           : nextEntry && nextEntry.locked
-          ? `<a class="nav-chapter-btn" href="${nextEntry.adwallUrl || '#'}">
+          ? `<span class="nav-chapter-btn" onclick="showAdwall()" style="cursor:pointer">
               <div class="nav-label">Next ▶</div>
-              <div class="nav-ch-title">Free via Ad</div>
-             </a>`
+              <div class="nav-ch-title">🔒 Locked</div>
+             </span>`
           : `<span class="nav-chapter-btn disabled"><div class="nav-label">Next ▶</div><div class="nav-ch-title">Latest</div></span>`
         }
       </div>
@@ -496,28 +501,8 @@ function renderChapter() {
   applyFontSize();
 }
 
-function showAdwall(targetEntry, targetHash) {
-  const entry = targetEntry || currentEntry;
-  const adwallUrl = entry && entry.adwallUrl;
-
-  if (!adwallUrl) {
-    Swal.fire({ title: 'Link not configured', text: 'The ad link for this chapter has not been set up yet.', icon: 'warning', customClass: { popup: 'ranobe-alert' } });
-    return;
-  }
-
-  const chTitle = entry.title ? entry.title : (targetHash ? 'Next Chapter' : 'This Chapter');
-  Swal.fire({
-    customClass: { popup: 'ranobe-alert' },
-    title: chTitle,
-    html: `This chapter is <strong>free</strong> — just a quick ad to support the translations.<br><br>
-           <span style="color:var(--accent);font-size:0.9em">💡 Bookmark the chapter page after the ad so you can come back anytime!</span>`,
-    icon: 'info',
-    confirmButtonText: '📖 Read Chapter →',
-    showCancelButton: true,
-    cancelButtonText: 'Maybe later',
-  }).then(result => {
-    if (result.isConfirmed) window.location.href = adwallUrl;
-  });
+function showAdwall() {
+  if (currentEntry && currentEntry.adwallUrl) window.location.href = currentEntry.adwallUrl;
 }
 
 async function loadAndRenderChapter() {
