@@ -184,6 +184,18 @@
   .nav-label { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
   .nav-ch-title { font-size: 0.85rem; font-weight: 700; }
 
+  /* OBFUSCATION JUNK SPANS — must never affect layout or visibility */
+  ._jnk {
+    display: none !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+    speak: none !important;
+  }
+
   /* ANTI-COPY */
   .chapter-body, .chapter-title, .chapter-wrap {
     -webkit-user-select: none !important;
@@ -373,6 +385,38 @@ function renderChapter() {
   const d = chapterData;
   const entry = currentEntry;
 
+  // ── CSS Obfuscation helpers ──────────────────────────────────
+  // Injects invisible junk spans between every word so reader-mode
+  // extensions and scrapers extract garbled text, while real readers
+  // see the page normally (junk is display:none / zero-size / aria-hidden).
+  const JUNK_POOL = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  function randJunk(len) {
+    let s = '';
+    for (let i = 0; i < len; i++)
+      s += JUNK_POOL[Math.floor(Math.random() * JUNK_POOL.length)];
+    return s;
+  }
+
+  // Wraps a plain-text paragraph string into obfuscated HTML.
+  // Each word gets a hidden junk span injected after it.
+  // Three techniques are layered so no single extension strips them all:
+  //   1. aria-hidden="true"  — ignored by screen readers
+  //   2. style="display:none" — invisible to eyes, present in DOM text
+  //   3. font-size:0;color:transparent — present visually but zero-size
+  function obfuscatePara(text) {
+    const esc = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const words = esc.split(' ');
+    return words.map((word, i) => {
+      if (!word) return '';
+      // Alternate between two junk span styles so pattern-matchers can't strip one class
+      const style = i % 2 === 0
+        ? `display:none`
+        : `font-size:0;color:transparent;position:absolute`;
+      const junk = randJunk(4 + Math.floor(Math.random() * 5));
+      return `${word}<span aria-hidden="true" style="${style}" class="_jnk">${junk}</span>`;
+    }).join(' ');
+  }
+
   // Detect code blocks (lines starting with >/space or containing {})
   function processContent(paragraphs) {
     let html = '';
@@ -389,11 +433,13 @@ function renderChapter() {
       }
       const isCode = para.startsWith('>') || para.startsWith('spell ') || para.startsWith('//') || para.startsWith('NAME:') || para.startsWith('SYSTEM');
       if (isCode) {
+        // Code blocks are not obfuscated — they're system/spell text, keep readable
         codeBuffer.push(para.replace(/</g,'&lt;').replace(/>/g,'&gt;'));
         inCode = true;
       } else {
         if (inCode) { html += `<pre>${codeBuffer.join('\n')}</pre>`; codeBuffer = []; inCode = false; }
-        html += `<p>${para.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</p>`;
+        // Wrap paragraph in obfuscated spans
+        html += `<p>${obfuscatePara(para)}</p>`;
       }
     });
     if (codeBuffer.length) html += `<pre>${codeBuffer.join('\n')}</pre>`;
