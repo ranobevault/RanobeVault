@@ -424,7 +424,15 @@
         <div class="form-row">
           <div class="form-group">
             <label>Cover Image URL</label>
-            <input class="form-input" id="ns-cover" placeholder="https://... or upload below">
+            <input class="form-input" id="ns-cover" placeholder="https://... or upload a file &rarr;">
+            <div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:0.82rem;color:var(--text2)">
+                &#128444;&#65039; Choose image file
+                <input type="file" id="ns-cover-file" accept="image/*" style="display:none" onchange="handleCoverFileSelect(this)">
+              </label>
+              <span id="ns-cover-filename" style="font-size:0.8rem;color:var(--text2);font-style:italic"></span>
+              <button class="btn-sm" id="ns-cover-upload-btn" style="display:none;padding:5px 10px;font-size:0.82rem" onclick="uploadCoverImage()">&#11014;&#65039; Upload to GitHub</button>
+            </div>
           </div>
           <div class="form-group">
             <label>Initial Volume</label>
@@ -927,6 +935,72 @@ function parseChapterContent(raw, title, vol, chNum, seriesId) {
 }
 
 // ========== NEW SERIES ==========
+// ── Cover image upload ──────────────────────────────────────────
+let coverFileObj = null;
+
+function handleCoverFileSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  coverFileObj = file;
+  document.getElementById('ns-cover-filename').textContent = file.name;
+  document.getElementById('ns-cover-upload-btn').style.display = 'inline-flex';
+}
+
+async function uploadCoverImage() {
+  const cfg = getConfig(); if (!cfg) return;
+  if (!coverFileObj) { alert('No image file selected.'); return; }
+
+  const btn = document.getElementById('ns-cover-upload-btn');
+  btn.disabled = true;
+  btn.textContent = 'Uploading...';
+
+  try {
+    // Read file as base64
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(coverFileObj);
+    });
+
+    // Sanitise filename and build path
+    const safeName = coverFileObj.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `covers/${safeName}`;
+
+    // Check if file already exists (need SHA for update)
+    let sha;
+    try {
+      const existing = await ghGetFile(cfg, path);
+      sha = existing?.sha;
+    } catch (_) { sha = undefined; }
+
+    // Upload binary directly via GitHub Contents API
+    const body = { message: `Add cover: ${safeName}`, content: base64, branch: cfg.branch };
+    if (sha) body.sha = sha;
+
+    const res = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: { Authorization: `token ${cfg.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || res.status);
+    }
+
+    // Fill in the public URL
+    const publicUrl = `https://${cfg.owner}.github.io/${cfg.repo}/${path}`;
+    document.getElementById('ns-cover').value = publicUrl;
+    document.getElementById('ns-cover-filename').textContent = `✓ ${safeName}`;
+    btn.textContent = '✅ Uploaded';
+  } catch (e) {
+    alert('Cover upload failed: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '⬆️ Upload to GitHub';
+  }
+}
+// ────────────────────────────────────────────────────────────────
+
 async function submitNewSeries() {
   const cfg = getConfig(); if (!cfg) return;
   const title = document.getElementById('ns-title').value.trim();
