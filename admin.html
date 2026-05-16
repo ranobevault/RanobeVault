@@ -279,6 +279,68 @@
   .btn-danger.ready { opacity:1;pointer-events:all }
   .btn-danger.ready:hover { background:rgba(224,92,106,.28);border-color:var(--red) }
   .del-empty { font-size:.82rem;color:var(--text3);text-align:center;padding:14px 0 }
+
+  /* ── BATCH UPLOAD ── */
+  .batch-ratio-legend {
+    display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:18px
+  }
+  @media(max-width:600px){ .batch-ratio-legend{grid-template-columns:repeat(3,1fr)} }
+  .brl-cell {
+    border-radius:6px;padding:5px 4px;text-align:center;font-size:.7rem;font-weight:700;
+    border:1px solid transparent
+  }
+  .brl-free  { background:rgba(92,224,160,.1);border-color:rgba(92,224,160,.3);color:var(--green) }
+  .brl-ad    { background:rgba(200,169,110,.1);border-color:rgba(200,169,110,.3);color:var(--accent) }
+  .brl-pair  { background:rgba(106,180,224,.1);border-color:rgba(106,180,224,.3);color:var(--blue) }
+  .brl-special{ background:rgba(224,92,160,.1);border-color:rgba(224,92,160,.3);color:#e05ca0 }
+
+  .batch-slot-grid { display:flex;flex-direction:column;gap:6px;margin-bottom:16px }
+  .batch-slot {
+    display:grid;grid-template-columns:28px 90px 1fr 110px;gap:8px;align-items:center;
+    padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);
+    transition:border-color .18s
+  }
+  .batch-slot.has-file { border-color:rgba(92,224,160,.35) }
+  .batch-slot.is-ad    { border-color:rgba(200,169,110,.35) }
+  .batch-slot.is-pair-a{ border-color:rgba(106,180,224,.4) }
+  .batch-slot.is-pair-b{ border-color:rgba(106,180,224,.2);opacity:.9 }
+  .batch-slot-num { font-size:.72rem;font-weight:700;color:var(--text3);text-align:center }
+  .batch-slot-type {
+    font-size:.7rem;font-weight:700;padding:3px 7px;border-radius:10px;text-align:center;white-space:nowrap
+  }
+  .batch-slot-drop {
+    background:var(--bg2);border:1px dashed var(--border2);border-radius:6px;
+    padding:6px 10px;font-size:.75rem;color:var(--text3);cursor:pointer;
+    transition:border-color .18s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+  .batch-slot-drop:hover,.batch-slot-drop.dragover { border-color:var(--accent);color:var(--text) }
+  .batch-slot-drop.filled { border-style:solid;border-color:rgba(92,224,160,.4);color:var(--green) }
+  .batch-slot-title { font-size:.75rem }
+  .batch-slot-title input {
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:5px;padding:4px 7px;font-family:'Lato',sans-serif;font-size:.75rem;outline:none
+  }
+  .batch-slot-title input:focus { border-color:var(--accent) }
+
+  .batch-adwall-section {
+    background:rgba(200,169,110,.05);border:1px solid rgba(200,169,110,.25);
+    border-radius:var(--radius);padding:14px;margin-bottom:14px;display:none
+  }
+  .batch-adwall-section.show { display:block }
+  .batch-adwall-row { display:flex;align-items:center;gap:8px;margin-bottom:8px }
+  .batch-adwall-label { font-size:.75rem;color:var(--accent);font-weight:700;min-width:80px }
+  .batch-adwall-url { font-size:.72rem;color:var(--text3);font-family:monospace;
+    flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 8px }
+  .batch-adwall-input {
+    flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:5px;padding:5px 8px;font-family:'Lato',sans-serif;font-size:.78rem;outline:none
+  }
+  .batch-adwall-input:focus { border-color:var(--accent) }
+  .batch-progress-row { display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:.75rem }
+  .batch-progress-bar-wrap { flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden }
+  .batch-progress-bar { height:100%;background:var(--green);border-radius:2px;transition:width .3s;width:0% }
+
 </style>
 </head>
 <body>
@@ -310,6 +372,7 @@
 <div class="admin-layout">
   <div class="sidebar">
     <div class="tab-item active" data-tab="new-series"><span class="tab-icon">📚</span><span class="tab-label">New Series</span></div>
+    <div class="tab-item" data-tab="batch-upload"><span class="tab-icon">📦</span><span class="tab-label">Batch Upload</span></div>
     <div class="tab-item" data-tab="update-series"><span class="tab-icon">✏️</span><span class="tab-label">Update Series</span></div>
     <div class="tab-item" data-tab="hashmap"><span class="tab-icon">🗺️</span><span class="tab-label">Hash Map</span></div>
     <div class="tab-item" data-tab="quick-actions"><span class="tab-icon">⚡</span><span class="tab-label">Quick Actions</span></div>
@@ -398,6 +461,61 @@
 
         <div class="upload-progress" id="ns-progress"><div class="upload-bar" id="ns-bar" style="width:0%"></div></div>
         <div class="log-box" id="ns-log"></div>
+      </div>
+    </div>
+
+
+    <!-- ══ BATCH UPLOAD ══ -->
+    <div class="tab-pane" id="tab-batch-upload">
+      <div class="card">
+        <div class="card-title">📦 Batch Upload — Full Arc</div>
+        <p style="font-size:.8rem;color:var(--text2);margin-bottom:14px;line-height:1.6">
+          Drop all chapter files at once. The system auto-applies the ad/free ratio and pairs chapters for you. Just fill in the Linkvertise links after uploading.
+        </p>
+
+        <!-- RATIO LEGEND -->
+        <div style="font-size:.7rem;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Chapter Pattern</div>
+        <div class="batch-ratio-legend" id="batch-legend"></div>
+
+        <!-- SERIES + VOL -->
+        <div class="form-row" style="margin-bottom:14px">
+          <div class="form-group">
+            <label>Series *</label>
+            <select class="form-select" id="batch-series" onchange="batchOnSeriesSelect()">
+              <option value="">— Select series —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Volume</label>
+            <input class="form-input" id="batch-vol" type="number" value="1" min="1" style="width:70px">
+          </div>
+          <div class="form-group">
+            <label>Starting Chapter #</label>
+            <input class="form-input" id="batch-start-ch" type="number" value="1" min="1" style="width:80px" oninput="batchRebuildSlots()">
+          </div>
+        </div>
+
+        <!-- SLOT GRID -->
+        <div style="font-size:.7rem;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">Upload Files</div>
+        <div class="batch-slot-grid" id="batch-slots"></div>
+
+        <!-- STEP 1: Upload all files -->
+        <button class="btn-sm" style="background:var(--blue);border-color:var(--blue);color:#0a1020;font-weight:700;margin-bottom:14px" id="batch-upload-btn" onclick="batchUploadFiles()">📤 Step 1 — Upload All Files</button>
+
+        <!-- STEP 2: Linkvertise links -->
+        <div class="batch-adwall-section" id="batch-adwall-section">
+          <div style="font-size:.82rem;color:var(--accent);font-weight:700;margin-bottom:10px">🔗 Step 2 — Paste Linkvertise Links</div>
+          <p style="font-size:.77rem;color:var(--text2);margin-bottom:12px">For each 🔒 Ad chapter below, copy its URL → create a Linkvertise link → paste it here.</p>
+          <div id="batch-adwall-inputs"></div>
+        </div>
+
+        <!-- STEP 3: Publish -->
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">
+          <button class="btn-sm primary" id="batch-publish-btn" onclick="batchPublish()" style="display:none">🚀 Step 3 — Publish All</button>
+        </div>
+
+        <div class="upload-progress" id="batch-progress" style="display:none"><div class="batch-progress-bar" id="batch-bar"></div></div>
+        <div class="log-box" id="batch-log" style="display:none;margin-top:10px"></div>
       </div>
     </div>
 
@@ -1295,6 +1413,359 @@ async function quickExportAll() {
 }
 
 
+
+// ══════════════════════════════════════════
+// ════════ BATCH UPLOAD TAB ════════════════
+// ══════════════════════════════════════════
+
+// ── The 15-chapter ratio pattern ──
+// type: 'free' | 'ad' | 'pair-a' | 'pair-b' | 'reward' | 'climax' | 'epilogue'
+// ad chapters are paired: ch4+5, ch6+7, ch8+9, ch10+11, ch12+13 wait — let's re-read the spec:
+// 1=free, 2=free, 3=free, 4=ad, 5=free, 6=ad, 7=free, 8=ad, 9=free, 10=ad, 11=free,
+// 12=ad, 13=free reward, 14=free climax, 15=free epilogue
+// Ad chapters 4,6,8,10,12 are each paired with the NEXT free chapter (5,7,9,11,13)
+// So pairs: (4+5), (6+7), (8+9), (10+11), (12+13)
+// Ch 13 is BOTH the pair-b of ch12 AND a "Reward" chapter — special label
+const BATCH_PATTERN = [
+  { n:1,  type:'free',    label:'Free' },
+  { n:2,  type:'free',    label:'Free' },
+  { n:3,  type:'free',    label:'Free' },
+  { n:4,  type:'pair-a',  label:'🔒 Ad',     pairWith:5 },
+  { n:5,  type:'pair-b',  label:'Free',      pairOf:4 },
+  { n:6,  type:'pair-a',  label:'🔒 Ad',     pairWith:7 },
+  { n:7,  type:'pair-b',  label:'Free',      pairOf:6 },
+  { n:8,  type:'pair-a',  label:'🔒 Ad',     pairWith:9 },
+  { n:9,  type:'pair-b',  label:'Free',      pairOf:8 },
+  { n:10, type:'pair-a',  label:'🔒 Ad',     pairWith:11 },
+  { n:11, type:'pair-b',  label:'Free',      pairOf:10 },
+  { n:12, type:'pair-a',  label:'🔒 Ad',     pairWith:13 },
+  { n:13, type:'pair-b',  label:'★ Reward',  pairOf:12, special:'reward' },
+  { n:14, type:'free',    label:'⚡ Climax',  special:'climax' },
+  { n:15, type:'free',    label:'🎌 Epilogue',special:'epilogue' },
+];
+
+const TYPE_COLORS = {
+  'free':    { bg:'rgba(92,224,160,.1)',  border:'rgba(92,224,160,.3)',  color:'var(--green)' },
+  'pair-a':  { bg:'rgba(200,169,110,.12)',border:'rgba(200,169,110,.35)',color:'var(--accent)' },
+  'pair-b':  { bg:'rgba(106,180,224,.1)', border:'rgba(106,180,224,.3)', color:'var(--blue)' },
+  'reward':  { bg:'rgba(224,92,160,.1)',  border:'rgba(224,92,160,.3)',  color:'#e05ca0' },
+  'climax':  { bg:'rgba(224,92,160,.1)',  border:'rgba(224,92,160,.3)',  color:'#e05ca0' },
+  'epilogue':{ bg:'rgba(224,92,160,.1)',  border:'rgba(224,92,160,.3)',  color:'#e05ca0' },
+};
+
+function typeColor(p) {
+  if (p.special) return TYPE_COLORS[p.special] || TYPE_COLORS.free;
+  return TYPE_COLORS[p.type] || TYPE_COLORS.free;
+}
+
+// State
+let batchSlots = []; // { pattern, chNum, hash, file, fileObj, title, uploaded }
+let batchHashPairs = {}; // pairSlotIndex -> partnerSlotIndex
+
+function batchBuildLegend() {
+  const el = document.getElementById('batch-legend');
+  el.innerHTML = BATCH_PATTERN.map(p => {
+    const tc = typeColor(p);
+    return `<div class="brl-cell" style="background:${tc.bg};border-color:${tc.border};color:${tc.color}">
+      Ch.${p.n}<br><span style="font-weight:400;font-size:.65rem">${p.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function batchOnSeriesSelect() {
+  const id = document.getElementById('batch-series').value;
+  if (!id || !cachedSeries) return;
+  const s = cachedSeries.find(x => x.id === id);
+  if (s) {
+    document.getElementById('batch-vol').value = s.latest_volume;
+    document.getElementById('batch-start-ch').value = (s.latest_chapter || 0) + 1;
+  }
+  batchRebuildSlots();
+}
+
+function batchRebuildSlots() {
+  const startCh = parseInt(document.getElementById('batch-start-ch').value) || 1;
+  batchSlots = BATCH_PATTERN.map((p, i) => ({
+    pattern: p,
+    chNum: startCh + i,
+    hash: genHash(),
+    file: '',
+    fileObj: null,
+    title: '',
+    uploaded: false,
+  }));
+  batchSlots.forEach(s => { s.file = s.hash + '.json'; });
+
+  const grid = document.getElementById('batch-slots');
+  grid.innerHTML = batchSlots.map((s, i) => {
+    const p = s.pattern;
+    const tc = typeColor(p);
+    const slotClass = p.type === 'pair-a' ? 'is-ad' : (p.type === 'pair-b' ? 'is-pair-b' : '');
+    const defaultTitle = p.special === 'reward' ? `Reward Chapter` :
+                         p.special === 'climax' ? `Climax` :
+                         p.special === 'epilogue' ? `Epilogue` : '';
+    return `<div class="batch-slot ${slotClass}" id="bslot-${i}">
+      <div class="batch-slot-num" style="color:${tc.color}">Ch.${s.chNum}</div>
+      <div class="batch-slot-type" style="background:${tc.bg};border:1px solid ${tc.border};color:${tc.color}">${p.label}</div>
+      <div class="batch-slot-drop" id="bdrop-${i}" onclick="document.getElementById('bfile-${i}').click()">
+        <input type="file" id="bfile-${i}" accept=".json,.txt" style="display:none" onchange="batchFileSelected(${i}, this)">
+        📄 Drop or click
+      </div>
+      <div class="batch-slot-title">
+        <input type="text" id="btitle-${i}" placeholder="Chapter title…" value="${defaultTitle}" oninput="batchSlots[${i}].title=this.value">
+      </div>
+    </div>`;
+  }).join('');
+
+  // Wire drag-drop for each slot
+  batchSlots.forEach((s, i) => {
+    const drop = document.getElementById(`bdrop-${i}`);
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('dragover'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('dragover'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault(); drop.classList.remove('dragover');
+      const fi = document.getElementById(`bfile-${i}`);
+      fi.files = e.dataTransfer.files;
+      fi.dispatchEvent(new Event('change'));
+    });
+  });
+
+  // Hide adwall + publish sections
+  document.getElementById('batch-adwall-section').classList.remove('show');
+  document.getElementById('batch-publish-btn').style.display = 'none';
+  document.getElementById('batch-log').style.display = 'none';
+  document.getElementById('batch-progress').style.display = 'none';
+}
+
+function batchFileSelected(i, input) {
+  if (!input.files[0]) return;
+  batchSlots[i].fileObj = input.files[0];
+  const drop = document.getElementById(`bdrop-${i}`);
+  drop.textContent = '✓ ' + input.files[0].name;
+  drop.classList.add('filled');
+  document.getElementById(`bslot-${i}`).classList.add('has-file');
+}
+
+async function batchUploadFiles() {
+  const cfg = getConfig(); if (!cfg) return;
+  const seriesId = document.getElementById('batch-series').value;
+  if (!seriesId) { alert('Please select a series first.'); return; }
+  const vol = parseInt(document.getElementById('batch-vol').value) || 1;
+
+  // Check all files present
+  const missing = batchSlots.filter(s => !s.fileObj).map(s => `Ch.${s.chNum}`);
+  if (missing.length) {
+    if (!confirm(`Missing files for: ${missing.join(', ')}\n\nContinue without them?`)) return;
+  }
+
+  const btn = document.getElementById('batch-upload-btn');
+  btn.disabled = true;
+  document.getElementById('batch-log').style.display = 'block';
+  document.getElementById('batch-progress').style.display = 'block';
+  clearLog('batch-log');
+
+  const toUpload = batchSlots.filter(s => s.fileObj && !s.uploaded);
+  let done = 0;
+
+  for (const slot of toUpload) {
+    try {
+      const raw = await readFileObj(slot.fileObj);
+      const title = document.getElementById(`btitle-${batchSlots.indexOf(slot)}`).value.trim()
+        || `Volume ${vol} Chapter ${slot.chNum}`;
+      slot.title = title;
+      const content = parseChapterContent(raw, `Volume ${vol} Chapter ${slot.chNum} — ${title}`, vol, slot.chNum, seriesId);
+      await ghPutFile(cfg, `data/chapters/${slot.file}`, content, `Batch: ${seriesId} ch${slot.chNum}`);
+      slot.uploaded = true;
+      done++;
+      document.getElementById('batch-bar').style.width = `${Math.round(done/toUpload.length*100)}%`;
+      log('batch-log', `Ch.${slot.chNum} uploaded ✓`, 'ok');
+    } catch(e) {
+      log('batch-log', `Ch.${slot.chNum} failed: ${e.message}`, 'err');
+    }
+  }
+
+  if (done === toUpload.length) {
+    log('batch-log', `✅ All ${done} files uploaded! Now paste Linkvertise links below.`, 'ok');
+  }
+
+  // Build adwall link inputs for pair-a slots
+  const base = `https://${cfg.owner}.github.io/${cfg.repo}`;
+  const adSlots = batchSlots.filter(s => s.pattern.type === 'pair-a' && s.uploaded);
+  const adContainer = document.getElementById('batch-adwall-inputs');
+  adContainer.innerHTML = adSlots.map(s => {
+    const chUrl = `${base}/chapter.html?h=${s.hash}`;
+    return `<div class="batch-adwall-row" style="flex-wrap:wrap;gap:6px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <div style="width:100%;display:flex;align-items:center;gap:8px">
+        <span class="batch-adwall-label">Ch.${s.chNum} 🔒</span>
+        <div class="batch-adwall-url">${chUrl}</div>
+        <button class="btn-sm" style="flex-shrink:0;padding:4px 10px;font-size:.72rem" onclick="batchCopyUrl(this,'${chUrl}')">📋 Copy</button>
+      </div>
+      <div style="width:100%;display:flex;align-items:center;gap:8px;padding-left:88px">
+        <span style="font-size:.72rem;color:var(--text3);min-width:100px">Linkvertise link:</span>
+        <input class="batch-adwall-input" id="badwall-${s.hash}" placeholder="https://linkvertise.com/…">
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('batch-adwall-section').classList.add('show');
+  document.getElementById('batch-publish-btn').style.display = 'inline-flex';
+  btn.disabled = false;
+}
+
+function batchCopyUrl(btn, url) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✓ Copied!'; btn.style.color = 'var(--green)';
+    setTimeout(() => { btn.textContent = '📋 Copy'; btn.style.color = ''; }, 2000);
+  });
+}
+
+function readFileObj(fileObj) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => rej(new Error('File read error'));
+    r.readAsText(fileObj);
+  });
+}
+
+async function batchPublish() {
+  const cfg = getConfig(); if (!cfg) return;
+  const seriesId = document.getElementById('batch-series').value;
+  const vol = parseInt(document.getElementById('batch-vol').value) || 1;
+
+  // Validate all adwall links filled
+  const adSlots = batchSlots.filter(s => s.pattern.type === 'pair-a' && s.uploaded);
+  for (const s of adSlots) {
+    const url = document.getElementById(`badwall-${s.hash}`)?.value.trim();
+    if (!url) { alert(`Please paste the Linkvertise link for Ch.${s.chNum}`); return; }
+    s.adwallUrl = url;
+  }
+
+  document.getElementById('batch-publish-btn').disabled = true;
+  clearLog('batch-log');
+  document.getElementById('batch-log').style.display = 'block';
+  log('batch-log', 'Publishing batch…', 'info');
+
+  try {
+    // 1. Build hashmap entries
+    let { data: hashmap, sha: hashmapSha } = await ghGetJSON(cfg, 'data/hashmap.json');
+    if (!hashmap) hashmap = {};
+
+    // Auto-find prev tail
+    const existingEntries = Object.entries(hashmap)
+      .filter(([h,v]) => v.series === seriesId)
+      .sort((a,b) => (a[1].volume||0)-(b[1].volume||0)||(a[1].chapter||0)-(b[1].chapter||0));
+    let prevHash = existingEntries.length ? existingEntries[existingEntries.length-1][0] : null;
+
+    const uploadedSlots = batchSlots.filter(s => s.uploaded);
+    for (let i = 0; i < uploadedSlots.length; i++) {
+      const s = uploadedSlots[i];
+      const p = s.pattern;
+      const nextSlot = uploadedSlots[i+1];
+      const nextHash = nextSlot ? nextSlot.hash : null;
+      const title = s.title || `Volume ${vol} Chapter ${s.chNum}`;
+
+      let entry = {
+        series: seriesId, volume: vol, chapter: s.chNum,
+        file: s.file, title,
+        prev: prevHash, next: nextHash,
+        locked: false
+      };
+
+      if (p.type === 'pair-a') {
+        // Locked ad chapter
+        const partnerSlot = uploadedSlots.find(x => x.pattern.n === p.pairWith);
+        entry.locked = true;
+        entry.adwallUrl = s.adwallUrl || '';
+        entry.unlocksPair = true;
+        entry.next = partnerSlot ? partnerSlot.hash : nextHash;
+      } else if (p.type === 'pair-b') {
+        // Free-after-ad chapter — still marked locked so localStorage is checked
+        entry.locked = true;
+      }
+
+      hashmap[s.hash] = entry;
+      if (prevHash && hashmap[prevHash]) hashmap[prevHash].next = s.hash;
+      prevHash = s.hash;
+    }
+
+    await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Batch: ${seriesId} vol${vol}`, hashmapSha);
+    log('batch-log', 'hashmap.json updated ✓', 'ok');
+
+    // 2. Chapter index
+    const indexPath = `data/chapters/${seriesId}-index.json`;
+    let { data: index, sha: indexSha } = await ghGetJSON(cfg, indexPath);
+    if (!index) index = { id: seriesId, chapters: [] };
+    for (const s of uploadedSlots) {
+      if (!index.chapters.find(c => c.hash === s.hash)) {
+        const p = s.pattern;
+        index.chapters.push({
+          volume: vol, chapter: s.chNum,
+          title: s.title || `Volume ${vol} Chapter ${s.chNum}`,
+          hash: s.hash,
+          locked: p.type === 'pair-a' || p.type === 'pair-b'
+        });
+      }
+    }
+    await ghPutFile(cfg, indexPath, JSON.stringify(index, null, 2), `Batch index: ${seriesId}`, indexSha);
+    log('batch-log', 'Chapter index updated ✓', 'ok');
+
+    // 3. series.json latest
+    const lastSlot = uploadedSlots[uploadedSlots.length - 1];
+    let { data: seriesArr, sha: seriesSha } = await ghGetJSON(cfg, 'data/series.json');
+    const si = seriesArr.findIndex(s => s.id === seriesId);
+    if (si !== -1 && lastSlot) {
+      seriesArr[si].latest_volume = vol;
+      seriesArr[si].latest_chapter = lastSlot.chNum;
+      await ghPutFile(cfg, 'data/series.json', JSON.stringify(seriesArr, null, 2), `Update: ${seriesId}`, seriesSha);
+      log('batch-log', 'series.json updated ✓', 'ok');
+    }
+
+    // 4. update.json
+    const series = cachedSeries?.find(s => s.id === seriesId);
+    let { data: updates, sha: updSha } = await ghGetJSON(cfg, 'data/update.json');
+    if (!updates) updates = [];
+    updates.unshift({
+      series_id: seriesId, title: series?.title || seriesId, cover: series?.cover || '',
+      reason: `Vol.${vol} Ch.${uploadedSlots[0].chNum}–${lastSlot.chNum} added`,
+      url: `series.html?id=${seriesId}`, timestamp: new Date().toISOString()
+    });
+    if (updates.length > 20) updates = updates.slice(0, 20);
+    await ghPutFile(cfg, 'data/update.json', JSON.stringify(updates, null, 2), `Feed: ${seriesId}`, updSha);
+    log('batch-log', 'update.json updated ✓', 'ok');
+
+    log('batch-log', `✅ Batch published! ${uploadedSlots.length} chapters live.`, 'ok');
+    document.getElementById('batch-adwall-section').classList.remove('show');
+    document.getElementById('batch-publish-btn').style.display = 'none';
+
+  } catch(e) {
+    log('batch-log', `❌ ${e.message}`, 'err');
+    console.error(e);
+  } finally {
+    document.getElementById('batch-publish-btn').disabled = false;
+  }
+}
+
+// Init batch tab when opened
+
+
+function batchInitTab() {
+  const cfg = getConfig(); if (!cfg) return;
+  // Load series dropdown
+  ghGetJSON(cfg, 'data/series.json').then(({data}) => {
+    cachedSeries = data || [];
+    const sel = document.getElementById('batch-series');
+    sel.innerHTML = '<option value="">— Select series —</option>';
+    cachedSeries.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id; o.textContent = `${s.title} (Vol.${s.latest_volume} Ch.${s.latest_chapter})`;
+      sel.appendChild(o);
+    });
+  }).catch(() => {});
+  batchBuildLegend();
+  batchRebuildSlots();
+}
+
 // ══════════════════════════════════════════
 // ════════════ DELETE TAB ══════════════════
 // ══════════════════════════════════════════
@@ -1610,6 +2081,8 @@ document.querySelectorAll('.tab-item').forEach(item => {
     document.getElementById('tab-' + item.dataset.tab).classList.add('active');
     if (item.dataset.tab === 'update-series' && document.getElementById('us-series').options.length <= 1) loadSeriesDropdown();
     if (item.dataset.tab === 'hashmap') loadHashmap();
+    if (item.dataset.tab === 'batch-upload') batchInitTab();
+    if (item.dataset.tab === 'delete') { dcLoadSeries(); dsLoadSeries(); }
     if (item.dataset.tab === 'delete') { dcLoadSeries(); dsLoadSeries(); }
   });
 });
