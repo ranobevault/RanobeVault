@@ -282,13 +282,7 @@
 <body>
 
 <!-- ADWALL OVERLAY -->
-<div class="adwall-overlay" id="adwall">
-  <div class="adwall-icon">📖</div>
-  <div class="adwall-title">Next Chapter</div>
-  <div class="adwall-sub">This chapter is free — just a quick ad to help keep translations going.<br>Thanks for the support!</div>
-  <a class="adwall-btn" id="adwall-link" href="#">View Ad & Continue Reading</a>
-  <div class="adwall-back" onclick="history.back()">← Go Back</div>
-</div>
+
 
 <div class="top-bar">
   <a class="back-btn" id="back-link" href="index.html">
@@ -501,33 +495,27 @@ function renderChapter() {
 }
 
 function showAdwall(targetEntry, targetHash) {
-  // targetEntry/targetHash: when triggered from next-chapter nav button
-  // falls back to currentEntry/hash when triggered because current chapter is locked
   const entry = targetEntry || currentEntry;
-  const entryHash = targetHash || hash;
+  const adwallUrl = entry && entry.adwallUrl;
 
-  // If already unlocked, navigate directly
-  if (entryHash && localStorage.getItem('unlocked_' + entryHash) === '1') {
-    if (targetHash) { window.location.href = 'chapter.html?h=' + targetHash; return; }
-    loadAndRenderChapter();
+  if (!adwallUrl) {
+    Swal.fire({ title: 'Link not configured', text: 'The ad link for this chapter has not been set up yet.', icon: 'warning', customClass: { popup: 'ranobe-alert' } });
     return;
   }
 
-  const overlay = document.getElementById('adwall');
-  const link = document.getElementById('adwall-link');
-  link.href = (entry && entry.adwallUrl) ? entry.adwallUrl : '#';
-  if (!entry || !entry.adwallUrl) {
-    link.textContent = 'Link not configured';
-    link.style.opacity = '0.5';
-  } else {
-    link.style.opacity = '';
-    link.textContent = 'View Ad & Continue Reading';
-    link.addEventListener('click', function() {
-      localStorage.setItem('unlocked_' + entryHash, '1');
-    }, { once: true });
-  }
-  overlay.classList.add('show');
-  document.getElementById('content').innerHTML = '';
+  const chTitle = entry.title ? entry.title : (targetHash ? 'Next Chapter' : 'This Chapter');
+  Swal.fire({
+    customClass: { popup: 'ranobe-alert' },
+    title: chTitle,
+    html: `This chapter is <strong>free</strong> — just a quick ad to support the translations.<br><br>
+           <span style="color:var(--accent);font-size:0.9em">💡 Bookmark the chapter page after the ad so you can come back anytime!</span>`,
+    icon: 'info',
+    confirmButtonText: '📖 Read Chapter →',
+    showCancelButton: true,
+    cancelButtonText: 'Maybe later',
+  }).then(result => {
+    if (result.isConfirmed) window.location.href = adwallUrl;
+  });
 }
 
 async function loadAndRenderChapter() {
