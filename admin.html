@@ -2038,20 +2038,22 @@ async function dcExecute() {
       log('dc-log','series.json updated ✓','ok');
     }
 
-    // 5. Clean update.json — remove entries that reference deleted chapter hashes
-    // (update.json doesn't store hashes directly, so we remove by series+chapter match)
+    // 5. Clean update.json
     let {data:upd,sha:updSha}=await ghGetJSON(cfg,'data/update.json');
     if(upd){
-      const deletedChNums=new Set(toDelete.map(ch=>ch.chapter));
       const before=upd.length;
-      upd=upd.filter(u=>!(u.series_id===dc.seriesId && toDelete.some(ch=>u.reason&&u.reason.includes(`Ch.${ch.chapter}`))));
+      const deletedChNums=new Set(toDelete.map(function(ch){return ch.chapter;}));
+      upd=upd.filter(function(u){
+        if(u.series_id!==dc.seriesId) return true;
+        return !toDelete.some(function(ch){ return u.reason && u.reason.indexOf('Ch.'+ch.chapter)!==-1; });
+      });
       if(upd.length!==before){
-        await ghPutFile(cfg,'data/update.json',JSON.stringify(upd,null,2),`Clean updates after delete`,updSha);
+        await ghPutFile(cfg,'data/update.json',JSON.stringify(upd,null,2),'Clean updates after delete',updSha);
         log('dc-log','update.json cleaned ✓','ok');
       }
     }
 
-    log('dc-log',`✅ ${toDelete.length} chapter(s) deleted.`,'ok');
+    log('dc-log','\u2705 '+toDelete.length+' chapter(s) deleted.','ok');
     dc.selected.clear();
     document.getElementById('dc-confirm').classList.remove('show');
     await dcSelectSeries(dc.seriesId,'');  // refresh list
