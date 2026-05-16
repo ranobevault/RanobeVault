@@ -208,6 +208,24 @@
   .upload-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
 
   /* ── DELETE TAB ── */
+  .del-step-indicator {
+    display:flex;align-items:center;gap:0;margin-bottom:24px;
+  }
+  .del-step {
+    display:flex;align-items:center;gap:8px;flex:1;
+  }
+  .del-step-num {
+    width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;font-weight:700;flex-shrink:0;
+    background:var(--bg3);border:1px solid var(--border);color:var(--text3);transition:all .3s;
+  }
+  .del-step.active .del-step-num { background:rgba(224,92,106,.2);border-color:var(--red);color:var(--red); }
+  .del-step.done .del-step-num { background:rgba(92,224,160,.15);border-color:var(--green);color:var(--green); }
+  .del-step-text { font-size:.75rem;color:var(--text3);transition:color .3s; }
+  .del-step.active .del-step-text { color:var(--text); }
+  .del-step.done .del-step-text { color:var(--green); }
+  .del-step-arrow { color:var(--border);font-size:.85rem;margin:0 6px;flex-shrink:0; }
+
   .del-label { font-size:0.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:8px;margin-top:2px }
   .del-series-grid { display:flex;flex-direction:column;gap:6px;margin-bottom:14px }
   .del-series-row {
@@ -222,6 +240,19 @@
   .del-series-name { font-size:.85rem;font-weight:700 }
   .del-series-sub { font-size:.7rem;color:var(--text3);margin-top:1px }
   .del-radio { width:15px;height:15px;accent-color:var(--red);flex-shrink:0 }
+
+  /* Step 2: mode select */
+  .del-mode-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px; }
+  .del-mode-card {
+    padding:16px;border-radius:var(--radius);border:2px solid var(--border);background:var(--bg3);
+    cursor:pointer;transition:all .2s;text-align:center;
+  }
+  .del-mode-card:hover { border-color:rgba(224,92,106,.5);background:rgba(224,92,106,.04); }
+  .del-mode-card.sel { border-color:var(--red);background:rgba(224,92,106,.09); }
+  .del-mode-icon { font-size:1.6rem;margin-bottom:8px; }
+  .del-mode-name { font-size:.87rem;font-weight:700;color:var(--text);margin-bottom:4px; }
+  .del-mode-desc { font-size:.72rem;color:var(--text3);line-height:1.5; }
+  .del-mode-card.sel .del-mode-name { color:var(--red); }
 
   .del-filter-row { display:flex;gap:8px;align-items:center;margin-bottom:10px }
   .del-search {
@@ -279,6 +310,19 @@
   .btn-danger.ready { opacity:1;pointer-events:all }
   .btn-danger.ready:hover { background:rgba(224,92,106,.28);border-color:var(--red) }
   .del-empty { font-size:.82rem;color:var(--text3);text-align:center;padding:14px 0 }
+
+  .del-selected-banner {
+    display:none;align-items:center;gap:10px;padding:10px 14px;
+    background:rgba(224,92,106,.07);border:1px solid rgba(224,92,106,.3);border-radius:8px;margin-bottom:16px;
+  }
+  .del-selected-banner.show { display:flex; }
+  .del-selected-banner-thumb { width:24px;height:32px;border-radius:3px;object-fit:cover;flex-shrink:0;background:var(--bg2); }
+  .del-selected-banner-title { font-size:.85rem;font-weight:700;flex:1; }
+  .del-selected-banner-change { font-size:.73rem;color:var(--text3);cursor:pointer;text-decoration:underline; }
+  .del-selected-banner-change:hover { color:var(--accent); }
+
+  .del-section { display:none; }
+  .del-section.show { display:block; }
 
   /* ── BATCH UPLOAD ── */
   .batch-ratio-legend {
@@ -697,63 +741,111 @@
 
     <!-- ══ DELETE ══ -->
     <div class="tab-pane" id="tab-delete">
-
-      <!-- DELETE CHAPTERS -->
       <div class="card">
-        <div class="card-title">🗑️ Delete Chapters</div>
+        <div class="card-title">🗑️ Delete Content</div>
 
-        <div class="del-label">1 — Pick a series</div>
-        <div class="del-series-grid" id="dc-series-grid"><div class="del-empty">Click "Load" to fetch series</div></div>
-        <button class="btn-sm" style="margin-bottom:18px" onclick="dcLoadSeries()">🔄 Load Series</button>
+        <!-- STEP INDICATOR -->
+        <div class="del-step-indicator">
+          <div class="del-step active" id="del-step-1">
+            <div class="del-step-num">1</div>
+            <div class="del-step-text">Pick Series</div>
+          </div>
+          <div class="del-step-arrow">›</div>
+          <div class="del-step" id="del-step-2">
+            <div class="del-step-num">2</div>
+            <div class="del-step-text">What to Delete</div>
+          </div>
+          <div class="del-step-arrow">›</div>
+          <div class="del-step" id="del-step-3">
+            <div class="del-step-num">3</div>
+            <div class="del-step-text">Confirm</div>
+          </div>
+        </div>
 
-        <div id="dc-ch-section" style="display:none">
-          <div class="del-label">2 — Filter &amp; select chapters</div>
+        <!-- STEP 1: PICK SERIES -->
+        <div class="del-section show" id="del-s1">
+          <div class="del-label">Select the series you want to work with</div>
+          <div class="del-series-grid" id="del-series-grid">
+            <div class="del-empty">Loading series…</div>
+          </div>
+        </div>
+
+        <!-- STEP 2: MODE SELECTION -->
+        <div class="del-section" id="del-s2">
+          <!-- Selected series banner -->
+          <div class="del-selected-banner show" id="del-banner">
+            <img class="del-selected-banner-thumb" id="del-banner-thumb" src="" alt="">
+            <div class="del-selected-banner-title" id="del-banner-title">—</div>
+            <span class="del-selected-banner-change" onclick="delGoBack()">← Change series</span>
+          </div>
+
+          <div class="del-label">What would you like to delete?</div>
+          <div class="del-mode-grid">
+            <div class="del-mode-card" id="del-mode-chapters" onclick="delSelectMode('chapters')">
+              <div class="del-mode-icon">📄</div>
+              <div class="del-mode-name">Delete Chapters</div>
+              <div class="del-mode-desc">Choose specific chapters to remove from this series. The series itself stays.</div>
+            </div>
+            <div class="del-mode-card" id="del-mode-series" onclick="delSelectMode('series')">
+              <div class="del-mode-icon">⛔</div>
+              <div class="del-mode-name">Delete Entire Series</div>
+              <div class="del-mode-desc">Remove the series and <strong style="color:var(--red)">all</strong> its chapters permanently. Cannot be undone.</div>
+            </div>
+          </div>
+          <button class="btn-sm primary" id="del-mode-next-btn" onclick="delModeNext()" style="opacity:.4;pointer-events:none">Continue →</button>
+        </div>
+
+        <!-- STEP 3A: DELETE CHAPTERS -->
+        <div class="del-section" id="del-s3-chapters">
+          <div class="del-selected-banner show" id="del-banner-ch">
+            <img class="del-selected-banner-thumb" id="del-banner-thumb-ch" src="" alt="">
+            <div class="del-selected-banner-title" id="del-banner-title-ch">—</div>
+            <span class="del-selected-banner-change" onclick="delGoToStep2()">← Back</span>
+          </div>
+
+          <div class="del-label">Select chapters to delete</div>
           <div class="del-filter-row">
             <input class="del-search" id="dc-search" placeholder="Search by title or chapter number…" oninput="dcFilter()">
             <span class="del-sel-all" onclick="dcToggleAll()" id="dc-sel-all-btn">Select all</span>
           </div>
           <div class="del-pills" id="dc-pills"></div>
-          <div class="del-ch-list" id="dc-ch-list"></div>
-        </div>
+          <div class="del-ch-list" id="dc-ch-list"><div class="del-empty">Loading chapters…</div></div>
 
-        <div class="del-confirm" id="dc-confirm">
-          <div class="del-confirm-title">⚠ You're about to permanently delete:</div>
-          <ul class="del-confirm-list" id="dc-confirm-list"></ul>
-          <div class="del-type-hint">Type <strong id="dc-phrase"></strong> to confirm</div>
-          <input class="del-type-in" id="dc-type" placeholder="Type the phrase above…" oninput="dcCheckPhrase()">
-          <div style="display:flex;gap:10px">
-            <button class="btn-danger" id="dc-go-btn" onclick="dcExecute()">🗑 Delete</button>
-            <button class="btn-sm" onclick="dcCancelConfirm()">Cancel</button>
+          <div class="del-confirm" id="dc-confirm">
+            <div class="del-confirm-title">⚠ You're about to permanently delete:</div>
+            <ul class="del-confirm-list" id="dc-confirm-list"></ul>
+            <div class="del-type-hint">Type <strong id="dc-phrase"></strong> to confirm</div>
+            <input class="del-type-in" id="dc-type" placeholder="Type the phrase above…" oninput="dcCheckPhrase()">
+            <div style="display:flex;gap:10px">
+              <button class="btn-danger" id="dc-go-btn" onclick="dcExecute()">🗑 Delete Chapters</button>
+              <button class="btn-sm" onclick="dcCancelConfirm()">Cancel</button>
+            </div>
           </div>
+          <div class="log-box" id="dc-log" style="display:none;margin-top:12px"></div>
         </div>
-        <div class="log-box" id="dc-log" style="display:none;margin-top:12px"></div>
-      </div>
 
-      <!-- DELETE SERIES -->
-      <div class="card">
-        <div class="card-title" style="color:var(--red)">⛔ Delete Entire Series</div>
-        <p style="font-size:.8rem;color:var(--text2);margin-bottom:16px;line-height:1.6">
-          Removes the series entry, every chapter file, all hashmap entries, and the index file.
-          <strong style="color:var(--red)">Cannot be undone.</strong>
-        </p>
-
-        <div class="del-label">Select series to delete</div>
-        <div class="del-series-grid" id="ds-series-grid"><div class="del-empty">Click "Load" to fetch series</div></div>
-        <button class="btn-sm" style="margin-bottom:18px" onclick="dsLoadSeries()">🔄 Load Series</button>
-
-        <div class="del-confirm" id="ds-confirm">
-          <div class="del-confirm-title">⛔ Permanently delete this series and ALL its data:</div>
-          <ul class="del-confirm-list" id="ds-confirm-list"></ul>
-          <div class="del-type-hint">Type the exact series title <strong id="ds-phrase"></strong> to confirm</div>
-          <input class="del-type-in" id="ds-type" placeholder="Type the series title exactly…" oninput="dsCheckPhrase()">
-          <div style="display:flex;gap:10px">
-            <button class="btn-danger" id="ds-go-btn" onclick="dsExecute()">⛔ Delete Series</button>
-            <button class="btn-sm" onclick="dsCancelConfirm()">Cancel</button>
+        <!-- STEP 3B: DELETE SERIES -->
+        <div class="del-section" id="del-s3-series">
+          <div class="del-selected-banner show" id="del-banner-ser">
+            <img class="del-selected-banner-thumb" id="del-banner-thumb-ser" src="" alt="">
+            <div class="del-selected-banner-title" id="del-banner-title-ser">—</div>
+            <span class="del-selected-banner-change" onclick="delGoToStep2()">← Back</span>
           </div>
-        </div>
-        <div class="log-box" id="ds-log" style="display:none;margin-top:12px"></div>
-      </div>
 
+          <div class="del-confirm show" id="ds-confirm" style="margin-top:0">
+            <div class="del-confirm-title">⛔ This will permanently delete everything for this series:</div>
+            <ul class="del-confirm-list" id="ds-confirm-list"></ul>
+            <div class="del-type-hint">To confirm, type the exact series title: <strong id="ds-phrase"></strong></div>
+            <input class="del-type-in" id="ds-type" placeholder="Type the series title exactly…" oninput="dsCheckPhrase()">
+            <div style="display:flex;gap:10px">
+              <button class="btn-danger" id="ds-go-btn" onclick="dsExecute()">⛔ Delete Entire Series</button>
+              <button class="btn-sm" onclick="delGoToStep2()">Cancel</button>
+            </div>
+          </div>
+          <div class="log-box" id="ds-log" style="display:none;margin-top:12px"></div>
+        </div>
+
+      </div>
     </div>
   </div>
 </div>
@@ -1856,86 +1948,163 @@ async function ghDeleteFile(cfg, path, sha, msg) {
   }
 }
 
-// ── helpers ──
-function delSeriesCard(s, gridId, onClickFn, radioGroup) {
-  return `<div class="del-series-row" id="${gridId}-${s.id}" onclick="${onClickFn}('${s.id}','${s.title.replace(/'/g,"\'")}')">
-    <img class="del-series-thumb" src="${s.cover||''}" onerror="this.style.opacity=0" alt="">
-    <div class="del-series-info">
-      <div class="del-series-name">${s.title}</div>
-      <div class="del-series-sub">${s.id} · Vol.${s.latest_volume} Ch.${s.latest_chapter} · ${s.status||'—'}</div>
-    </div>
-    <input type="radio" class="del-radio" name="${radioGroup}" value="${s.id}" onclick="event.stopPropagation()">
-  </div>`;
+// ── Shared delete state ──
+let delState = { series: null, mode: null };
+let dc = { hashmap:null, all:[], filtered:[], selected:new Set(), vol:'all' };
+let ds = { selected: null };
+
+// ── Step management ──
+function delSetStep(step) {
+  [1,2,3].forEach(n => {
+    const el = document.getElementById(`del-step-${n}`);
+    el.classList.remove('active','done');
+    if (n < step) el.classList.add('done');
+    else if (n === step) el.classList.add('active');
+  });
 }
 
-// ══ DELETE CHAPTERS ══════════════════════
-let dc = { seriesId:null, hashmap:null, all:[], filtered:[], selected:new Set(), vol:'all' };
+function delShowSection(id) {
+  ['del-s1','del-s2','del-s3-chapters','del-s3-series'].forEach(s => {
+    document.getElementById(s).classList.remove('show');
+  });
+  document.getElementById(id).classList.add('show');
+}
 
-async function dcLoadSeries() {
-  const cfg=getConfig(); if(!cfg) return;
-  const grid = document.getElementById('dc-series-grid');
+function delGoBack() {
+  delState.series = null; delState.mode = null;
+  document.getElementById('del-mode-chapters').classList.remove('sel');
+  document.getElementById('del-mode-series').classList.remove('sel');
+  const nb = document.getElementById('del-mode-next-btn');
+  nb.style.opacity='.4'; nb.style.pointerEvents='none';
+  delSetStep(1); delShowSection('del-s1');
+}
+
+function delGoToStep2() {
+  delState.mode = null;
+  document.getElementById('del-mode-chapters').classList.remove('sel');
+  document.getElementById('del-mode-series').classList.remove('sel');
+  const nb = document.getElementById('del-mode-next-btn');
+  nb.style.opacity='.4'; nb.style.pointerEvents='none';
+  delSetStep(2); delShowSection('del-s2');
+}
+
+// ── Step 1: Load & pick series ──
+async function delLoadSeries() {
+  const cfg = getConfig(); if (!cfg) return;
+  const grid = document.getElementById('del-series-grid');
   grid.innerHTML = '<div class="del-empty">Loading…</div>';
   try {
-    const {data} = await ghGetJSON(cfg,'data/series.json');
-    if (!data||!data.length) { grid.innerHTML='<div class="del-empty">No series found.</div>'; return; }
-    grid.innerHTML = data.map(s => delSeriesCard(s,'dc-row','dcSelectSeries','dc-radio')).join('');
-  } catch(e) { grid.innerHTML=`<div class="del-empty" style="color:var(--red)">${e.message}</div>`; }
+    const {data} = await ghGetJSON(cfg, 'data/series.json');
+    if (!data || !data.length) { grid.innerHTML = '<div class="del-empty">No series found.</div>'; return; }
+    grid.innerHTML = data.map(s => `
+      <div class="del-series-row" id="del-srow-${s.id}" onclick="delPickSeries(${JSON.stringify(JSON.stringify(s)).slice(1,-1)})">
+        <img class="del-series-thumb" src="${s.cover||''}" onerror="this.style.opacity=0" alt="">
+        <div class="del-series-info">
+          <div class="del-series-name">${s.title}</div>
+          <div class="del-series-sub">${s.id} · Vol.${s.latest_volume} Ch.${s.latest_chapter} · ${s.status||'—'}</div>
+        </div>
+        <input type="radio" class="del-radio" name="del-series-radio" value="${s.id}" onclick="event.stopPropagation()">
+      </div>
+    `).join('');
+    // attach click handlers properly
+    data.forEach(s => {
+      document.getElementById(`del-srow-${s.id}`).addEventListener('click', () => delPickSeries(s));
+    });
+    // remove inline onclick to avoid double firing
+    document.querySelectorAll('#del-series-grid .del-series-row').forEach(r => r.removeAttribute('onclick'));
+  } catch(e) {
+    grid.innerHTML = `<div class="del-empty" style="color:var(--red)">${e.message}</div>`;
+  }
 }
 
-async function dcSelectSeries(id, title) {
-  const cfg=getConfig(); if(!cfg) return;
-  // visually select
-  document.querySelectorAll('#dc-series-grid .del-series-row').forEach(r=>r.classList.remove('sel'));
-  const row = document.getElementById(`dc-row-${id}`);
-  if(row){ row.classList.add('sel'); row.querySelector('input').checked=true; }
+function delPickSeries(s) {
+  delState.series = s;
+  document.querySelectorAll('#del-series-grid .del-series-row').forEach(r => r.classList.remove('sel'));
+  const row = document.getElementById(`del-srow-${s.id}`);
+  if (row) { row.classList.add('sel'); row.querySelector('input').checked = true; }
 
-  dc.seriesId = id; dc.selected.clear();
-  document.getElementById('dc-ch-section').style.display='block';
+  ['del-banner-title','del-banner-title-ch','del-banner-title-ser'].forEach(id => {
+    document.getElementById(id).textContent = s.title;
+  });
+  ['del-banner-thumb','del-banner-thumb-ch','del-banner-thumb-ser'].forEach(id => {
+    document.getElementById(id).src = s.cover || '';
+  });
+
+  delSetStep(2); delShowSection('del-s2');
+}
+
+// ── Step 2: Mode selection ──
+function delSelectMode(mode) {
+  delState.mode = mode;
+  document.getElementById('del-mode-chapters').classList.toggle('sel', mode === 'chapters');
+  document.getElementById('del-mode-series').classList.toggle('sel', mode === 'series');
+  const btn = document.getElementById('del-mode-next-btn');
+  btn.style.opacity = '1'; btn.style.pointerEvents = 'all';
+}
+
+async function delModeNext() {
+  if (!delState.mode) return;
+  delSetStep(3);
+  if (delState.mode === 'chapters') {
+    delShowSection('del-s3-chapters');
+    await dcLoadChapters();
+  } else {
+    delShowSection('del-s3-series');
+    await dsPopulateConfirm();
+  }
+}
+
+// ── Step 3A: DELETE CHAPTERS ──
+async function dcLoadChapters() {
+  const cfg = getConfig(); if (!cfg) return;
+  const list = document.getElementById('dc-ch-list');
+  list.innerHTML = '<div class="del-empty">Loading chapters…</div>';
+  dc.selected.clear();
   document.getElementById('dc-confirm').classList.remove('show');
-  document.getElementById('dc-log').style.display='none';
-  document.getElementById('dc-ch-list').innerHTML='<div class="del-empty">Loading chapters…</div>';
-  document.getElementById('dc-pills').innerHTML='';
+  document.getElementById('dc-log').style.display = 'none';
+  document.getElementById('dc-pills').innerHTML = '';
+  document.getElementById('dc-search').value = '';
 
-  const {data:hashmap} = await ghGetJSON(cfg,'data/hashmap.json');
-  dc.hashmap = hashmap||{};
+  const {data:hashmap} = await ghGetJSON(cfg, 'data/hashmap.json');
+  dc.hashmap = hashmap || {};
   dc.all = Object.entries(dc.hashmap)
-    .filter(([h,v])=>v.series===id)
-    .map(([h,v])=>({hash:h,...v}))
-    .sort((a,b)=>a.volume-b.volume||a.chapter-b.chapter);
-  dc.vol='all'; dc.filtered=[...dc.all];
+    .filter(([h,v]) => v.series === delState.series.id)
+    .map(([h,v]) => ({hash:h,...v}))
+    .sort((a,b) => a.volume-b.volume || a.chapter-b.chapter);
+  dc.vol = 'all'; dc.filtered = [...dc.all];
   dcBuildPills(); dcRender();
 }
 
 function dcBuildPills() {
-  const vols=[...new Set(dc.all.map(c=>c.volume))].sort((a,b)=>a-b);
-  const bar=document.getElementById('dc-pills'); bar.innerHTML='';
-  if(vols.length<2) return;
-  const all=document.createElement('span');
-  all.className='del-pill on'; all.textContent='All Volumes';
-  all.onclick=()=>{ dc.vol='all'; dcSetPill(all); dcFilter(); };
+  const vols = [...new Set(dc.all.map(c=>c.volume))].sort((a,b)=>a-b);
+  const bar = document.getElementById('dc-pills'); bar.innerHTML = '';
+  if (vols.length < 2) return;
+  const all = document.createElement('span');
+  all.className = 'del-pill on'; all.textContent = 'All Volumes';
+  all.onclick = () => { dc.vol='all'; dcSetPill(all); dcFilter(); };
   bar.appendChild(all);
-  vols.forEach(v=>{
-    const p=document.createElement('span'); p.className='del-pill'; p.textContent=`Vol ${v}`;
-    p.onclick=()=>{ dc.vol=v; dcSetPill(p); dcFilter(); };
+  vols.forEach(v => {
+    const p = document.createElement('span'); p.className='del-pill'; p.textContent=`Vol ${v}`;
+    p.onclick = () => { dc.vol=v; dcSetPill(p); dcFilter(); };
     bar.appendChild(p);
   });
 }
-function dcSetPill(el){ document.querySelectorAll('#dc-pills .del-pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+function dcSetPill(el) { document.querySelectorAll('#dc-pills .del-pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 
 function dcFilter() {
-  const q=document.getElementById('dc-search').value.toLowerCase();
-  dc.filtered = dc.all.filter(ch=>{
-    const vm = dc.vol==='all'||ch.volume===dc.vol;
-    const tm = !q||String(ch.chapter).includes(q)||(ch.title||'').toLowerCase().includes(q);
-    return vm&&tm;
+  const q = document.getElementById('dc-search').value.toLowerCase();
+  dc.filtered = dc.all.filter(ch => {
+    const vm = dc.vol==='all' || ch.volume===dc.vol;
+    const tm = !q || String(ch.chapter).includes(q) || (ch.title||'').toLowerCase().includes(q);
+    return vm && tm;
   });
   dcRender();
 }
 
 function dcRender() {
-  const list=document.getElementById('dc-ch-list');
-  if(!dc.filtered.length){ list.innerHTML='<div class="del-empty">No chapters match.</div>'; return; }
-  list.innerHTML = dc.filtered.map(ch=>{
+  const list = document.getElementById('dc-ch-list');
+  if (!dc.filtered.length) { list.innerHTML='<div class="del-empty">No chapters match.</div>'; return; }
+  list.innerHTML = dc.filtered.map(ch => {
     const sel = dc.selected.has(ch.hash);
     const badges = [
       ch.locked && !ch.adwallUrl ? '<span class="del-ch-badge pair">pair-free</span>' : '',
@@ -1948,32 +2117,32 @@ function dcRender() {
       ${badges}
     </div>`;
   }).join('');
-  // update select-all button text
-  const allSel = dc.filtered.every(ch=>dc.selected.has(ch.hash));
-  document.getElementById('dc-sel-all-btn').textContent = allSel?'Deselect all':'Select all';
+  const allSel = dc.filtered.length>0 && dc.filtered.every(ch=>dc.selected.has(ch.hash));
+  document.getElementById('dc-sel-all-btn').textContent = allSel ? 'Deselect all' : 'Select all';
 }
 
 function dcToggle(hash) {
   dc.selected.has(hash) ? dc.selected.delete(hash) : dc.selected.add(hash);
-  const row=document.getElementById(`dci-${hash}`);
-  if(row){ row.classList.toggle('sel',dc.selected.has(hash)); row.querySelector('input').checked=dc.selected.has(hash); }
-  document.getElementById('dc-sel-all-btn').textContent = dc.filtered.every(ch=>dc.selected.has(ch.hash))?'Deselect all':'Select all';
+  const row = document.getElementById(`dci-${hash}`);
+  if (row) { row.classList.toggle('sel',dc.selected.has(hash)); row.querySelector('input').checked=dc.selected.has(hash); }
+  const allSel = dc.filtered.length>0 && dc.filtered.every(ch=>dc.selected.has(ch.hash));
+  document.getElementById('dc-sel-all-btn').textContent = allSel ? 'Deselect all' : 'Select all';
   dcUpdateConfirm();
 }
 
 function dcToggleAll() {
   const allSel = dc.filtered.every(ch=>dc.selected.has(ch.hash));
-  dc.filtered.forEach(ch=>{ allSel ? dc.selected.delete(ch.hash) : dc.selected.add(ch.hash); });
+  dc.filtered.forEach(ch => { allSel ? dc.selected.delete(ch.hash) : dc.selected.add(ch.hash); });
   dcRender(); dcUpdateConfirm();
 }
 
 function dcUpdateConfirm() {
-  const box=document.getElementById('dc-confirm');
-  if(!dc.selected.size){ box.classList.remove('show'); return; }
+  const box = document.getElementById('dc-confirm');
+  if (!dc.selected.size) { box.classList.remove('show'); return; }
   const items = dc.all.filter(ch=>dc.selected.has(ch.hash));
   const phrase = `DELETE ${dc.selected.size}`;
   document.getElementById('dc-phrase').textContent = phrase;
-  document.getElementById('dc-confirm-list').innerHTML = items.map(ch=>
+  document.getElementById('dc-confirm-list').innerHTML = items.map(ch =>
     `<li>Vol.${ch.volume} Ch.${ch.chapter} — ${ch.title||'Untitled'} <span style="color:var(--text3);font-size:.7rem">[${ch.hash}]</span></li>`
   ).join('');
   document.getElementById('dc-type').value='';
@@ -1984,8 +2153,8 @@ function dcUpdateConfirm() {
 }
 
 function dcCheckPhrase() {
-  const phrase=`DELETE ${dc.selected.size}`;
-  const ok=document.getElementById('dc-type').value.trim()===phrase;
+  const phrase = `DELETE ${dc.selected.size}`;
+  const ok = document.getElementById('dc-type').value.trim() === phrase;
   document.getElementById('dc-type').classList.toggle('ok',ok);
   document.getElementById('dc-go-btn').classList.toggle('ready',ok);
 }
@@ -1996,24 +2165,21 @@ function dcCancelConfirm() {
 }
 
 async function dcExecute() {
-  const cfg=getConfig(); if(!cfg) return;
-  const logBox=document.getElementById('dc-log'); logBox.style.display='block'; logBox.innerHTML='';
-  document.getElementById('dc-go-btn').disabled=true;
+  const cfg = getConfig(); if (!cfg) return;
+  const logBox = document.getElementById('dc-log'); logBox.style.display='block'; logBox.innerHTML='';
+  document.getElementById('dc-go-btn').disabled = true;
+  const seriesId = delState.series.id;
   const toDelete = dc.all.filter(ch=>dc.selected.has(ch.hash));
   const deletedSet = new Set(toDelete.map(ch=>ch.hash));
 
   try {
-    // 1. Delete chapter files
-    for(const ch of toDelete) {
-      const f=await ghGetFile(cfg,`data/chapters/${ch.file}`);
-      if(f) { await ghDeleteFile(cfg,`data/chapters/${ch.file}`,f.sha,`Delete ${dc.seriesId} ch${ch.chapter}`); }
+    for (const ch of toDelete) {
+      const f = await ghGetFile(cfg,`data/chapters/${ch.file}`);
+      if (f) await ghDeleteFile(cfg,`data/chapters/${ch.file}`,f.sha,`Delete ${seriesId} ch${ch.chapter}`);
       log('dc-log',`Deleted ${ch.file} ✓`,'ok');
     }
-
-    // 2. Hashmap — single read-modify-write
-    let {data:hm,sha:hmSha}=await ghGetJSON(cfg,'data/hashmap.json');
+    let {data:hm,sha:hmSha} = await ghGetJSON(cfg,'data/hashmap.json');
     toDelete.forEach(ch=>delete hm[ch.hash]);
-    // repair broken prev/next links
     Object.values(hm).forEach(e=>{
       if(deletedSet.has(e.prev)) e.prev=null;
       if(deletedSet.has(e.next)) e.next=null;
@@ -2021,143 +2187,110 @@ async function dcExecute() {
     await ghPutFile(cfg,'data/hashmap.json',JSON.stringify(hm,null,2),`Remove ${toDelete.length} chapters`,hmSha);
     log('dc-log','hashmap.json updated ✓','ok');
 
-    // 3. Chapter index
-    const ip=`data/chapters/${dc.seriesId}-index.json`;
-    let {data:idx,sha:idxSha}=await ghGetJSON(cfg,ip);
-    if(idx){ idx.chapters=idx.chapters.filter(c=>!deletedSet.has(c.hash));
-      await ghPutFile(cfg,ip,JSON.stringify(idx,null,2),`Update index: ${dc.seriesId}`,idxSha);
-      log('dc-log','Chapter index updated ✓','ok'); }
-
-    // 4. series.json latest chapter
-    let {data:sarr,sha:sSha}=await ghGetJSON(cfg,'data/series.json');
-    const remaining=Object.values(hm).filter(v=>v.series===dc.seriesId).sort((a,b)=>b.volume-a.volume||b.chapter-a.chapter);
-    const si=sarr.findIndex(s=>s.id===dc.seriesId);
-    if(si!==-1&&remaining.length){
+    const ip = `data/chapters/${seriesId}-index.json`;
+    let {data:idx,sha:idxSha} = await ghGetJSON(cfg,ip);
+    if (idx) {
+      idx.chapters = idx.chapters.filter(c=>!deletedSet.has(c.hash));
+      await ghPutFile(cfg,ip,JSON.stringify(idx,null,2),`Update index: ${seriesId}`,idxSha);
+      log('dc-log','Chapter index updated ✓','ok');
+    }
+    let {data:sarr,sha:sSha} = await ghGetJSON(cfg,'data/series.json');
+    const remaining = Object.values(hm).filter(v=>v.series===seriesId).sort((a,b)=>b.volume-a.volume||b.chapter-a.chapter);
+    const si = sarr.findIndex(s=>s.id===seriesId);
+    if (si!==-1 && remaining.length) {
       sarr[si].latest_volume=remaining[0].volume; sarr[si].latest_chapter=remaining[0].chapter;
       await ghPutFile(cfg,'data/series.json',JSON.stringify(sarr,null,2),'Fix latest after delete',sSha);
       log('dc-log','series.json updated ✓','ok');
     }
-
-    // 5. Clean update.json
-    let {data:upd,sha:updSha}=await ghGetJSON(cfg,'data/update.json');
-    if(upd){
-      const before=upd.length;
-      const deletedChNums=new Set(toDelete.map(function(ch){return ch.chapter;}));
-      upd=upd.filter(function(u){
-        if(u.series_id!==dc.seriesId) return true;
-        return !toDelete.some(function(ch){ return u.reason && u.reason.indexOf('Ch.'+ch.chapter)!==-1; });
+    let {data:upd,sha:updSha} = await ghGetJSON(cfg,'data/update.json');
+    if (upd) {
+      const before = upd.length;
+      upd = upd.filter(u=>{
+        if(u.series_id!==seriesId) return true;
+        return !toDelete.some(ch=>u.reason&&u.reason.indexOf('Ch.'+ch.chapter)!==-1);
       });
-      if(upd.length!==before){
+      if (upd.length!==before) {
         await ghPutFile(cfg,'data/update.json',JSON.stringify(upd,null,2),'Clean updates after delete',updSha);
         log('dc-log','update.json cleaned ✓','ok');
       }
     }
-
-    log('dc-log','\u2705 '+toDelete.length+' chapter(s) deleted.','ok');
+    log('dc-log',`✅ ${toDelete.length} chapter(s) deleted.`,'ok');
     dc.selected.clear();
     document.getElementById('dc-confirm').classList.remove('show');
-    await dcSelectSeries(dc.seriesId,'');  // refresh list
-  } catch(e){ log('dc-log',`❌ ${e.message}`,'err'); }
+    await dcLoadChapters();
+  } catch(e) { log('dc-log',`❌ ${e.message}`,'err'); }
   finally { document.getElementById('dc-go-btn').disabled=false; }
 }
 
-// ══ DELETE SERIES ════════════════════════
-let ds = { selected:null };
+// ── Step 3B: DELETE SERIES ──
+async function dsPopulateConfirm() {
+  const cfg = getConfig(); if (!cfg) return;
+  const s = delState.series;
+  ds.selected = s;
+  document.getElementById('ds-log').style.display='none';
 
-async function dsLoadSeries() {
-  const cfg=getConfig(); if(!cfg) return;
-  const grid=document.getElementById('ds-series-grid');
-  grid.innerHTML='<div class="del-empty">Loading…</div>';
-  try {
-    const {data}=await ghGetJSON(cfg,'data/series.json');
-    if(!data||!data.length){ grid.innerHTML='<div class="del-empty">No series found.</div>'; return; }
-    grid.innerHTML = data.map(s=>delSeriesCard(s,'ds-row','dsSelectSeries','ds-radio')).join('');
-  } catch(e){ grid.innerHTML=`<div class="del-empty" style="color:var(--red)">${e.message}</div>`; }
-}
+  const {data:hm} = await ghGetJSON(cfg,'data/hashmap.json');
+  const count = Object.values(hm||{}).filter(v=>v.series===s.id).length;
 
-async function dsSelectSeries(id, title) {
-  const cfg=getConfig(); if(!cfg) return;
-  document.querySelectorAll('#ds-series-grid .del-series-row').forEach(r=>r.classList.remove('sel'));
-  const row=document.getElementById(`ds-row-${id}`);
-  if(row){ row.classList.add('sel'); row.querySelector('input').checked=true; }
-  ds.selected={id,title};
-
-  // Count chapters
-  const {data:hm}=await ghGetJSON(cfg,'data/hashmap.json');
-  const count=Object.values(hm||{}).filter(v=>v.series===id).length;
-
-  document.getElementById('ds-confirm-list').innerHTML=`
-    <li><strong>${title}</strong> (${id})</li>
+  document.getElementById('ds-confirm-list').innerHTML = `
+    <li><strong>${s.title}</strong> (${s.id})</li>
     <li>${count} chapter file${count!==1?'s':''}</li>
     <li>All hashmap entries for this series</li>
-    <li>Chapter index file (${id}-index.json)</li>
+    <li>Chapter index file (${s.id}-index.json)</li>
     <li>Series entry from series.json</li>
   `;
-  document.getElementById('ds-phrase').textContent=title;
+  document.getElementById('ds-phrase').textContent = s.title;
   document.getElementById('ds-type').value='';
   document.getElementById('ds-type').classList.remove('ok');
   document.getElementById('ds-go-btn').classList.remove('ready');
-  document.getElementById('ds-confirm').classList.add('show');
-  document.getElementById('ds-log').style.display='none';
-  document.getElementById('ds-confirm').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-function dsCheckPhrase(){
-  if(!ds.selected) return;
-  const ok=document.getElementById('ds-type').value.trim()===ds.selected.title;
+function dsCheckPhrase() {
+  if (!ds.selected) return;
+  const ok = document.getElementById('ds-type').value.trim() === ds.selected.title;
   document.getElementById('ds-type').classList.toggle('ok',ok);
   document.getElementById('ds-go-btn').classList.toggle('ready',ok);
 }
 
-function dsCancelConfirm(){
-  ds.selected=null;
-  document.querySelectorAll('#ds-series-grid .del-series-row').forEach(r=>{ r.classList.remove('sel'); r.querySelector('input').checked=false; });
-  document.getElementById('ds-confirm').classList.remove('show');
-}
-
-async function dsExecute(){
-  const cfg=getConfig(); if(!cfg||!ds.selected) return;
-  const {id,title}=ds.selected;
-  const logBox=document.getElementById('ds-log'); logBox.style.display='block'; logBox.innerHTML='';
+async function dsExecute() {
+  const cfg = getConfig(); if (!cfg||!ds.selected) return;
+  const {id,title} = ds.selected;
+  const logBox = document.getElementById('ds-log'); logBox.style.display='block'; logBox.innerHTML='';
   document.getElementById('ds-go-btn').disabled=true;
 
   try {
-    const {data:hm,sha:hmSha}=await ghGetJSON(cfg,'data/hashmap.json');
-    const entries=Object.entries(hm||{}).filter(([h,v])=>v.series===id);
+    const {data:hm,sha:hmSha} = await ghGetJSON(cfg,'data/hashmap.json');
+    const entries = Object.entries(hm||{}).filter(([h,v])=>v.series===id);
     log('ds-log',`Found ${entries.length} chapter(s)…`,'info');
 
-    // 1. Delete chapter files
-    for(const [hash,entry] of entries){
-      const f=await ghGetFile(cfg,`data/chapters/${entry.file}`);
-      if(f) await ghDeleteFile(cfg,`data/chapters/${entry.file}`,f.sha,`Delete series ${id}`);
+    for (const [hash,entry] of entries) {
+      const f = await ghGetFile(cfg,`data/chapters/${entry.file}`);
+      if (f) await ghDeleteFile(cfg,`data/chapters/${entry.file}`,f.sha,`Delete series ${id}`);
       log('ds-log',`Deleted ${entry.file} ✓`,'ok');
     }
-
-    // 2. Hashmap
     entries.forEach(([h])=>delete hm[h]);
     await ghPutFile(cfg,'data/hashmap.json',JSON.stringify(hm,null,2),`Remove series ${id} from hashmap`,hmSha);
     log('ds-log','hashmap.json updated ✓','ok');
 
-    // 3. Index file
-    const ip=`data/chapters/${id}-index.json`;
-    const idxFile=await ghGetFile(cfg,ip);
-    if(idxFile){ await ghDeleteFile(cfg,ip,idxFile.sha,`Delete index ${id}`); log('ds-log','Index file deleted ✓','ok'); }
+    const ip = `data/chapters/${id}-index.json`;
+    const idxFile = await ghGetFile(cfg,ip);
+    if (idxFile) { await ghDeleteFile(cfg,ip,idxFile.sha,`Delete index ${id}`); log('ds-log','Index file deleted ✓','ok'); }
 
-    // 4. series.json
-    const {data:sarr,sha:sSha}=await ghGetJSON(cfg,'data/series.json');
+    const {data:sarr,sha:sSha} = await ghGetJSON(cfg,'data/series.json');
     await ghPutFile(cfg,'data/series.json',JSON.stringify(sarr.filter(s=>s.id!==id),null,2),`Remove series: ${title}`,sSha);
     log('ds-log','series.json updated ✓','ok');
 
-    // 5. update.json
-    const {data:upd,sha:updSha}=await ghGetJSON(cfg,'data/update.json');
-    if(upd){ await ghPutFile(cfg,'data/update.json',JSON.stringify(upd.filter(u=>u.series_id!==id),null,2),`Clean updates: ${id}`,updSha);
-      log('ds-log','update.json cleaned ✓','ok'); }
+    const {data:upd,sha:updSha} = await ghGetJSON(cfg,'data/update.json');
+    if (upd) {
+      await ghPutFile(cfg,'data/update.json',JSON.stringify(upd.filter(u=>u.series_id!==id),null,2),`Clean updates: ${id}`,updSha);
+      log('ds-log','update.json cleaned ✓','ok');
+    }
 
     log('ds-log',`✅ Series "${title}" fully deleted.`,'ok');
-    ds.selected=null;
-    document.getElementById('ds-confirm').classList.remove('show');
-    dsLoadSeries();
-  } catch(e){ log('ds-log',`❌ ${e.message}`,'err'); }
+    ds.selected=null; delState.series=null; delState.mode=null;
+    delSetStep(1); delShowSection('del-s1');
+    await delLoadSeries();
+  } catch(e) { log('ds-log',`❌ ${e.message}`,'err'); }
   finally { document.getElementById('ds-go-btn').disabled=false; }
 }
 
@@ -2171,7 +2304,7 @@ document.querySelectorAll('.tab-item').forEach(item => {
     if (item.dataset.tab === 'update-series' && document.getElementById('us-series').options.length <= 1) loadSeriesDropdown();
     if (item.dataset.tab === 'hashmap') loadHashmap();
     if (item.dataset.tab === 'batch-upload') batchInitTab();
-    if (item.dataset.tab === 'delete') { dcLoadSeries(); dsLoadSeries(); }
+    if (item.dataset.tab === 'delete') { delLoadSeries(); }
   });
 });
 
