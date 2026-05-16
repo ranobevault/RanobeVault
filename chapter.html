@@ -10,6 +10,7 @@
 <link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.6/sweetalert2.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.6/sweetalert2.all.min.js"></script>
 <style>
@@ -259,34 +260,62 @@
   /* ADWALL OVERLAY */
   .adwall-overlay {
     position: fixed; inset: 0; z-index: 200;
-    background: rgba(10,10,16,0.97); backdrop-filter: blur(8px);
+    background: rgba(8,8,14,0.98); backdrop-filter: blur(12px);
     display: none; flex-direction: column; align-items: center; justify-content: center;
     padding: 30px; text-align: center;
   }
   .adwall-overlay.show { display: flex; }
-  .adwall-icon { font-size: 3rem; margin-bottom: 16px; }
-  .adwall-title { font-family: 'Cinzel', serif; font-size: 1.4rem; color: var(--accent); margin-bottom: 10px; }
-  .adwall-sub { color: var(--text2); font-size: 0.9rem; margin-bottom: 28px; line-height: 1.6; }
-  .adwall-btn {
-    background: var(--accent); color: #1a1410; border: none;
-    border-radius: var(--radius); padding: 14px 32px;
-    font-size: 1rem; font-weight: 700; cursor: pointer;
-    font-family: 'Lato', sans-serif; transition: background 0.2s;
-    text-decoration: none; display: inline-block;
+  .adwall-badge {
+    background: rgba(92,224,160,0.15); border: 1px solid rgba(92,224,160,0.4);
+    color: var(--green); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.18em;
+    padding: 4px 14px; border-radius: 20px; margin-bottom: 16px;
   }
-  .adwall-btn:hover { background: var(--accent2); }
-  .adwall-back { margin-top: 14px; font-size: 0.8rem; color: var(--text3); cursor: pointer; }
+  .adwall-icon { font-size: 3rem; margin-bottom: 10px; }
+  .adwall-title {
+    font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--accent);
+    margin-bottom: 10px; letter-spacing: 0.05em;
+  }
+  .adwall-sub { color: var(--text2); font-size: 0.88rem; margin-bottom: 26px; line-height: 1.7; max-width: 320px; }
+  .adwall-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #1a1410; border: none;
+    border-radius: var(--radius); padding: 15px 36px;
+    font-size: 1rem; font-weight: 700; cursor: pointer;
+    font-family: 'Lato', sans-serif; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 4px 24px rgba(200,169,110,0.3);
+  }
+  .adwall-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(200,169,110,0.45); }
+  .adwall-btn-icon { font-size: 1.1rem; }
+  .adwall-note { margin-top: 12px; font-size: 0.75rem; color: var(--text3); }
+  .adwall-back { margin-top: 20px; font-size: 0.8rem; color: var(--text3); cursor: pointer; }
   .adwall-back:hover { color: var(--accent); }
+  /* locked next btn styling */
+  .nav-chapter-btn.locked-btn {
+    border-color: rgba(200,169,110,0.3);
+    background: rgba(200,169,110,0.05);
+    cursor: pointer; opacity: 1 !important; pointer-events: all !important;
+  }
+  .nav-chapter-btn.locked-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .locked-tag {
+    display: inline-block; font-size: 0.62rem; padding: 1px 7px;
+    background: rgba(200,169,110,0.15); border: 1px solid rgba(200,169,110,0.3);
+    border-radius: 10px; color: var(--accent); margin-left: 4px; vertical-align: middle;
+  }
 </style>
 </head>
 <body>
 
 <!-- ADWALL OVERLAY -->
 <div class="adwall-overlay" id="adwall">
-  <div class="adwall-icon">🔒</div>
-  <div class="adwall-title">Locked Chapter</div>
-  <div class="adwall-sub">Just a quick ad — completely free.<br>It helps keep the provider motivated to continue.</div>
-  <a class="adwall-btn" id="adwall-link" href="#">Watch/View Ad & Read Chapter</a>
+  <div class="adwall-badge">FREE</div>
+  <div class="adwall-icon">🔓</div>
+  <div class="adwall-title">Unlock This Chapter</div>
+  <div class="adwall-sub">This chapter is free to read — just complete a quick link to unlock it.<br>No payment needed, ever.</div>
+  <a class="adwall-btn" id="adwall-link" href="#" onclick="handleAdwallClick(event)">
+    <span class="adwall-btn-icon">⚡</span> Unlock for Free
+  </a>
+  <div class="adwall-note">You only need to do this once per chapter.</div>
   <div class="adwall-back" onclick="history.back()">← Go Back</div>
 </div>
 
@@ -476,9 +505,9 @@ function renderChapter() {
               <div class="nav-ch-title">Ch. ${nextEntry.chapter}</div>
              </a>`
           : nextEntry && nextEntry.locked
-          ? `<span class="nav-chapter-btn" onclick="showAdwall()" style="cursor:pointer">
+          ? `<span class="nav-chapter-btn locked-btn" onclick="showAdwall('${entry.next}')">
               <div class="nav-label">Next ▶</div>
-              <div class="nav-ch-title">🔒 Locked</div>
+              <div class="nav-ch-title">Ch. ${nextEntry.chapter} <span class="locked-tag">FREE</span></div>
              </span>`
           : `<span class="nav-chapter-btn disabled"><div class="nav-label">Next ▶</div><div class="nav-ch-title">Latest</div></span>`
         }
@@ -497,8 +526,72 @@ function renderChapter() {
   applyFontSize();
 }
 
-function showAdwall() {
-  if (currentEntry && currentEntry.adwallUrl) window.location.href = currentEntry.adwallUrl;
+function showAdwall(targetHash) {
+  // If targetHash passed, we're unlocking the NEXT chapter from the nav button
+  const unlockHash = targetHash || hash;
+  const entry = targetHash ? hashmapData[targetHash] : currentEntry;
+
+  // Already unlocked? Navigate directly
+  if (localStorage.getItem(`unlocked_${unlockHash}`) === '1') {
+    window.location.href = `chapter.html?h=${unlockHash}`;
+    return;
+  }
+
+  // Store which hash we're trying to unlock
+  sessionStorage.setItem('pending_unlock_hash', unlockHash);
+
+  const overlay = document.getElementById('adwall');
+  const link = document.getElementById('adwall-link');
+
+  if (entry && entry.adwallUrl) {
+    link.href = entry.adwallUrl;
+    link.style.opacity = '1';
+    link.style.pointerEvents = 'all';
+  } else {
+    link.href = '#';
+    link.querySelector ? (link.querySelector('.adwall-btn-icon') || link).textContent : null;
+    link.style.opacity = '0.5';
+    link.style.pointerEvents = 'none';
+  }
+
+  overlay.classList.add('show');
+}
+
+function handleAdwallClick(e) {
+  const link = document.getElementById('adwall-link');
+  if (!link.href || link.href === '#' || link.href === window.location.href) {
+    e.preventDefault(); return;
+  }
+
+  const unlockHash = sessionStorage.getItem('pending_unlock_hash') || hash;
+  // Mark as unlocked immediately before leaving the page
+  localStorage.setItem(`unlocked_${unlockHash}`, '1');
+  sessionStorage.setItem('show_bookmark_alert', unlockHash);
+  // Let the link navigate normally (opens ad page)
+}
+
+function showBookmarkAlert() {
+  setTimeout(() => {
+    Swal.fire({
+      background: '#1e1e2e',
+      color: '#e8e6f0',
+      icon: 'success',
+      iconColor: '#5ce0a0',
+      title: '<span style="font-family:Cinzel,serif;color:#c8a96e;font-size:1.2rem">📌 Save This Page!</span>',
+      html: `
+        <div style="font-size:0.88rem;color:#a09dbb;line-height:1.8;margin-top:4px">
+          Bookmark or save this page so you can come back anytime without going through the link again.
+          <br><br>
+          <span style="font-size:0.8rem;color:#6b6884">
+            📱 <strong style="color:#c8a96e">Mobile:</strong> Share → Add to Home Screen<br>
+            💻 <strong style="color:#c8a96e">Desktop:</strong> Ctrl+D &nbsp;/&nbsp; Cmd+D (Mac)
+          </span>
+        </div>`,
+      confirmButtonText: '📖 Got it, Start Reading!',
+      confirmButtonColor: '#c8a96e',
+      showCancelButton: false,
+    });
+  }, 800);
 }
 
 async function loadAndRenderChapter() {
@@ -580,6 +673,7 @@ function showError(title, msg) {
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 init();
+showBookmarkAlert();
 
 /* ============================================================
    ANTI-COPY SYSTEM — RanobeVault
