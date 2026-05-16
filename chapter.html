@@ -10,6 +10,8 @@
 <link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.6/sweetalert2.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/11.10.6/sweetalert2.all.min.js"></script>
 <style>
   :root {
     --bg: #0d0d12; --bg2: #13131c;
@@ -181,6 +183,49 @@
   .nav-chapter-btn.disabled { opacity: 0.35; pointer-events: none; }
   .nav-label { font-size: 0.7rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 3px; }
   .nav-ch-title { font-size: 0.85rem; font-weight: 700; }
+
+  /* ANTI-COPY */
+  .chapter-body, .chapter-title, .chapter-wrap {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+  }
+  /* Override SweetAlert2 to match RanobeVault theme */
+  .swal2-popup.ranobe-alert {
+    background: #1e1e2e !important;
+    border: 1px solid #2e2e45 !important;
+    border-radius: 14px !important;
+    font-family: 'Lato', sans-serif !important;
+  }
+  .swal2-popup.ranobe-alert .swal2-title {
+    color: #c8a96e !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 1.15rem !important;
+  }
+  .swal2-popup.ranobe-alert .swal2-html-container {
+    color: #a09dbb !important;
+    font-size: 0.88rem !important;
+    line-height: 1.6 !important;
+  }
+  .swal2-popup.ranobe-alert .swal2-confirm {
+    background: #c8a96e !important;
+    color: #1a1410 !important;
+    font-family: 'Lato', sans-serif !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    padding: 10px 28px !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .swal2-popup.ranobe-alert .swal2-confirm:focus {
+    box-shadow: 0 0 0 3px rgba(200,169,110,0.3) !important;
+  }
+  .swal2-popup.ranobe-alert .swal2-icon.swal2-warning {
+    border-color: #c8a96e !important;
+    color: #c8a96e !important;
+  }
 
   /* LOADING */
   .loading-screen {
@@ -512,6 +557,197 @@ function showError(title, msg) {
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 init();
+
+/* ============================================================
+   ANTI-COPY SYSTEM — RanobeVault
+   Covers: text selection (desktop mouseup), long-press (mobile),
+   right-click, Ctrl/Cmd + C/A/U/S/P/X, F12, devtools shortcuts
+   ============================================================ */
+(function() {
+  let alertShowing = false;
+  let longPressTimer = null;
+  const LONG_PRESS_MS = 500;
+
+  function fireAlert(reason) {
+    // Immediately nuke any selection
+    if (window.getSelection) window.getSelection().removeAllRanges();
+    if (document.selection) document.selection.empty();
+
+    if (alertShowing) return;
+    alertShowing = true;
+
+    Swal.fire({
+      customClass: { popup: 'ranobe-alert' },
+      title: '✦ Content Protected ✦',
+      html: `<span style="font-size:1.5rem;display:block;margin-bottom:8px">📖</span>
+             This content is protected.<br>
+             <span style="color:#c8a96e;font-size:0.82rem">${reason}</span>`,
+      icon: 'warning',
+      confirmButtonText: 'Understood',
+      showClass: {
+        popup: 'animate__animated animate__fadeInDown animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOutUp animate__faster'
+      },
+      timer: 3500,
+      timerProgressBar: true,
+      allowOutsideClick: true,
+      backdrop: 'rgba(10,10,16,0.7)',
+      willClose: () => {
+        alertShowing = false;
+        if (window.getSelection) window.getSelection().removeAllRanges();
+      }
+    });
+  }
+
+  // ── 1. Text selection on desktop (mouseup) ──────────────────
+  document.addEventListener('mouseup', function(e) {
+    const sel = window.getSelection();
+    if (sel && sel.toString().trim().length > 0) {
+      // Only block if selection is inside chapter content
+      const anchor = sel.anchorNode;
+      if (anchor && document.querySelector('.chapter-body') &&
+          document.querySelector('.chapter-body').contains(anchor)) {
+        e.preventDefault();
+        fireAlert('Please respect the author\'s work.');
+      }
+    }
+  }, true);
+
+  // Also clear selection on mousedown inside chapter body
+  document.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.chapter-body') || e.target.closest('.chapter-wrap')) {
+      setTimeout(() => {
+        if (window.getSelection) window.getSelection().removeAllRanges();
+      }, 0);
+    }
+  }, true);
+
+  // ── 2. Long-press on mobile (touchend) ──────────────────────
+  document.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.chapter-body') || e.target.closest('.chapter-wrap')) {
+      longPressTimer = setTimeout(function() {
+        if (window.getSelection) window.getSelection().removeAllRanges();
+        fireAlert('Long press detected — content is protected.');
+      }, LONG_PRESS_MS);
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', function() {
+    clearTimeout(longPressTimer);
+    const sel = window.getSelection();
+    if (sel && sel.toString().trim().length > 0) {
+      fireAlert('Text selection is disabled on this page.');
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function() {
+    clearTimeout(longPressTimer);
+  }, { passive: true });
+
+  // ── 3. Right-click context menu ─────────────────────────────
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('.chapter-body') || e.target.closest('.chapter-wrap') ||
+        e.target.closest('.chapter-header')) {
+      e.preventDefault();
+      e.stopPropagation();
+      fireAlert('Right-click is disabled on this page.');
+      return false;
+    }
+  }, true);
+
+  // ── 4. Keyboard shortcuts ────────────────────────────────────
+  const BLOCKED_KEYS = new Set(['c', 'a', 'u', 's', 'p', 'x']);
+  document.addEventListener('keydown', function(e) {
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    // Block Ctrl/Cmd + C/A/U/S/P/X
+    if (ctrl && BLOCKED_KEYS.has(e.key.toLowerCase())) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      const labels = { c:'Copy', a:'Select All', u:'View Source', s:'Save', p:'Print', x:'Cut' };
+      fireAlert(`Keyboard shortcut (${e.key.toUpperCase()}) is disabled.`);
+      return false;
+    }
+
+    // Block F12
+    if (e.key === 'F12') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      fireAlert('Developer tools shortcut is disabled.');
+      return false;
+    }
+
+    // Block Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (devtools)
+    if (ctrl && e.shiftKey && ['i','j','c','k'].includes(e.key.toLowerCase())) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      fireAlert('Developer tools are restricted on this page.');
+      return false;
+    }
+
+    // Block Ctrl+Shift+U (Linux view source)
+    if (ctrl && e.shiftKey && e.key.toLowerCase() === 'u') {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      fireAlert('This action is disabled.');
+      return false;
+    }
+  }, true);
+
+  // ── 5. Copy / Cut events ─────────────────────────────────────
+  document.addEventListener('copy', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (window.getSelection) window.getSelection().removeAllRanges();
+    fireAlert('Copying is not allowed on this page.');
+    return false;
+  }, true);
+
+  document.addEventListener('cut', function(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    fireAlert('Cutting is not allowed on this page.');
+    return false;
+  }, true);
+
+  // ── 6. Drag selection ────────────────────────────────────────
+  document.addEventListener('dragstart', function(e) {
+    if (e.target.closest('.chapter-body')) {
+      e.preventDefault();
+      return false;
+    }
+  }, true);
+
+  // ── 7. selectstart — prevent selection initiation ────────────
+  document.addEventListener('selectstart', function(e) {
+    if (e.target.closest('.chapter-body') || e.target.closest('.chapter-header')) {
+      e.preventDefault();
+      return false;
+    }
+  }, true);
+
+  // ── 8. Devtools detection (size change heuristic) ────────────
+  let devtoolsOpen = false;
+  const threshold = 160;
+  setInterval(function() {
+    const widthDiff  = window.outerWidth  - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    if ((widthDiff > threshold || heightDiff > threshold) && !devtoolsOpen) {
+      devtoolsOpen = true;
+      // Blur the chapter body content as a soft deterrent
+      const body = document.querySelector('.chapter-body');
+      if (body) body.style.filter = 'blur(6px)';
+      fireAlert('Developer tools detected. Content is blurred for protection.');
+    } else if (widthDiff <= threshold && heightDiff <= threshold && devtoolsOpen) {
+      devtoolsOpen = false;
+      const body = document.querySelector('.chapter-body');
+      if (body) body.style.filter = '';
+    }
+  }, 1000);
+
+})();
 </script>
 </body>
 </html>
