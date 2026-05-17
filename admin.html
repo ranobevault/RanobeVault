@@ -1188,6 +1188,7 @@ async function submitNewSeries() {
 // ========== LOCKED CHAPTER FLOW ==========
 let usFileUploaded = false;
 let usHashB = '', usFileB = '';
+let usUnlockKey = null;  // generated when locked; included in the Linkvertise destination URL
 
 function onLockedToggle() {
   const locked = document.getElementById('us-locked').checked;
@@ -1202,6 +1203,7 @@ function onLockedToggle() {
   document.getElementById('us-adwall-step').style.display = 'none';
   document.getElementById('us-submit').textContent = locked ? '🚀 Publish' : '🚀 Upload & Publish';
   usFileUploaded = false;
+  usUnlockKey = locked ? genUnlockKey() : null;  // reset/regenerate on toggle
   document.getElementById('us-adwall-url').value = '';
   document.getElementById('us-chapter-url').textContent = '';
 }
@@ -1227,6 +1229,9 @@ function generateUSPreview() {
   document.getElementById('us-phash').textContent = usHash;
   document.getElementById('us-pfile').textContent = usFile;
   const pair = document.getElementById('us-unlocks-pair')?.checked;
+  // Pre-generate unlock key whenever hash is regenerated
+  const locked = document.getElementById('us-locked')?.checked;
+  usUnlockKey = locked ? genUnlockKey() : null;
   if (pair) {
     usHashB = genHash(); usFileB = `${usHashB}.json`;
     document.getElementById('us-phash-a').textContent = usHash;
@@ -1286,9 +1291,8 @@ async function uploadOnlyChapter() {
 
     usFileUploaded = true;
     const base = `https://${cfg.owner}.github.io/${cfg.repo}`;
-    const _ukVal = (typeof usUnlockKey !== 'undefined' && usUnlockKey) ? usUnlockKey : '';
-    const chapterUrl = _ukVal
-      ? `${base}/chapter.html?h=${usHash}&unlock=${_ukVal}`
+    const chapterUrl = usUnlockKey
+      ? `${base}/chapter.html?h=${usHash}&unlock=${usUnlockKey}`
       : `${base}/chapter.html?h=${usHash}`;
     document.getElementById('us-chapter-url').textContent = chapterUrl;
     document.getElementById('us-adwall-step').style.display = 'block';
@@ -1414,7 +1418,7 @@ async function submitUpdateSeries() {
       hashmap[usHashB] = { series: seriesId, volume: vol, chapter: chNumB, file: usFileB, locked: true, unlockKey: pairUnlockKey, prev: usHash, next: null };
       if (actualPrev && hashmap[actualPrev]) hashmap[actualPrev].next = usHash;
     } else {
-      const usUnlockKey = locked ? genUnlockKey() : null;
+      // usUnlockKey is the module-level key already generated in generateUSPreview
       hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNumA, file: usFile, locked, prev: actualPrev, next: null };
       if (locked && adwallUrl) hashmap[usHash].adwallUrl = adwallUrl;
       if (locked && usUnlockKey) hashmap[usHash].unlockKey = usUnlockKey;
