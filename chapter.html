@@ -589,6 +589,13 @@ function handleAdwallClick(e) {
 }
 
 function showBookmarkAlert() {
+  const SUPPRESS_KEY = 'rv_bookmark_suppress';
+  const SUPPRESS_HOURS = 12;
+
+  // Check if user clicked "Don't show again" within the last 12 hours
+  const suppressed = localStorage.getItem(SUPPRESS_KEY);
+  if (suppressed && Date.now() - parseInt(suppressed) < SUPPRESS_HOURS * 60 * 60 * 1000) return;
+
   setTimeout(() => {
     Swal.fire({
       background: '#1e1e2e',
@@ -604,10 +611,20 @@ function showBookmarkAlert() {
             📱 <strong style="color:#c8a96e">Mobile:</strong> Share → Add to Home Screen<br>
             💻 <strong style="color:#c8a96e">Desktop:</strong> Ctrl+D &nbsp;/&nbsp; Cmd+D (Mac)
           </span>
+          <br><br>
+          <label style="display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-size:0.78rem;color:#6b6884">
+            <input type="checkbox" id="swal-dont-show" style="accent-color:#c8a96e;width:14px;height:14px;cursor:pointer">
+            Don't show this again for 12 hours
+          </label>
         </div>`,
       confirmButtonText: '📖 Got it, Start Reading!',
       confirmButtonColor: '#c8a96e',
       showCancelButton: false,
+      preConfirm: () => {
+        if (document.getElementById('swal-dont-show')?.checked) {
+          localStorage.setItem(SUPPRESS_KEY, Date.now().toString());
+        }
+      }
     });
   }, 800);
 }
@@ -692,10 +709,10 @@ function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 
 init();
 // Show bookmark alert if user just completed an ad unlock
+// Only show bookmark alert when user just completed an ad unlock
 if (unlockParam) {
   showBookmarkAlert();
 }
-showBookmarkAlert();
 
 /* ============================================================
    ANTI-COPY SYSTEM — RanobeVault
