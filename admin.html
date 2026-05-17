@@ -971,6 +971,7 @@ function setProgress(barId, progressId, pct) {
 
 let nsHash = '', nsFile = '';
 let usHash = '', usFile = '';
+let usUnlockKey = null;  // generated when locked; included in the Linkvertise destination URL
 
 function generateNSPreview() {
   nsHash = genHash(); nsFile = genFilename();
@@ -1188,7 +1189,6 @@ async function submitNewSeries() {
 // ========== LOCKED CHAPTER FLOW ==========
 let usFileUploaded = false;
 let usHashB = '', usFileB = '';
-let usUnlockKey = null;  // generated when locked; included in the Linkvertise destination URL
 
 function onLockedToggle() {
   const locked = document.getElementById('us-locked').checked;
