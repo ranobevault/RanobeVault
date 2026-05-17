@@ -935,6 +935,11 @@ async function ghGetJSON(cfg, path) {
 }
 
 // ========== UTILITIES ==========
+function genUnlockKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  return 'uk_' + Array.from({length: 10}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
 function genHash(len = 9) {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   return Array.from({length: len}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
@@ -1142,7 +1147,9 @@ async function submitNewSeries() {
     // 4. Update hashmap.json
     let { data: hashmap, sha: hashmapSha } = await ghGetJSON(cfg, 'data/hashmap.json');
     if (!hashmap) hashmap = {};
+    const nsUnlockKey = locked ? genUnlockKey() : null;
     hashmap[nsHash] = { series: id, volume: vol, chapter: chNum, file: nsFile, locked, prev: null, next: null };
+    if (locked && nsUnlockKey) hashmap[nsHash].unlockKey = nsUnlockKey;
     await ghPutFile(cfg, 'data/hashmap.json', JSON.stringify(hashmap, null, 2), `Add hash for ${id} ch${chNum}`, hashmapSha);
     log('ns-log', 'hashmap.json updated ✓', 'ok');
     setProgress('ns-bar', 'ns-progress', 70);
@@ -1279,7 +1286,10 @@ async function uploadOnlyChapter() {
 
     usFileUploaded = true;
     const base = `https://${cfg.owner}.github.io/${cfg.repo}`;
-    const chapterUrl = `${base}/chapter.html?h=${usHash}`;
+    const _ukVal = (typeof usUnlockKey !== 'undefined' && usUnlockKey) ? usUnlockKey : '';
+    const chapterUrl = _ukVal
+      ? `${base}/chapter.html?h=${usHash}&unlock=${_ukVal}`
+      : `${base}/chapter.html?h=${usHash}`;
     document.getElementById('us-chapter-url').textContent = chapterUrl;
     document.getElementById('us-adwall-step').style.display = 'block';
     document.getElementById('us-locked-step1').style.display = 'none';
@@ -1398,13 +1408,16 @@ async function submitUpdateSeries() {
 
     if (isPair) {
       // Chapter A: locked, adwall, unlocksPair
-      hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNumA, file: usFile, locked: true, adwallUrl, unlocksPair: true, prev: actualPrev, next: usHashB };
-      // Chapter B: also marked locked (so it checks localStorage) but no adwall — free after A
-      hashmap[usHashB] = { series: seriesId, volume: vol, chapter: chNumB, file: usFileB, locked: true, prev: usHash, next: null };
+      const pairUnlockKey = genUnlockKey();
+      hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNumA, file: usFile, locked: true, adwallUrl, unlockKey: pairUnlockKey, unlocksPair: true, prev: actualPrev, next: usHashB };
+      // Chapter B: same unlockKey — completing one ad unlocks both
+      hashmap[usHashB] = { series: seriesId, volume: vol, chapter: chNumB, file: usFileB, locked: true, unlockKey: pairUnlockKey, prev: usHash, next: null };
       if (actualPrev && hashmap[actualPrev]) hashmap[actualPrev].next = usHash;
     } else {
+      const usUnlockKey = locked ? genUnlockKey() : null;
       hashmap[usHash] = { series: seriesId, volume: vol, chapter: chNumA, file: usFile, locked, prev: actualPrev, next: null };
       if (locked && adwallUrl) hashmap[usHash].adwallUrl = adwallUrl;
+      if (locked && usUnlockKey) hashmap[usHash].unlockKey = usUnlockKey;
       if (actualPrev && hashmap[actualPrev]) hashmap[actualPrev].next = usHash;
     }
 
@@ -1839,15 +1852,20 @@ async function batchPublish() {
       };
 
       if (p.type === 'pair-a') {
-        // Locked ad chapter
         const partnerSlot = uploadedSlots.find(x => x.pattern.n === p.pairWith);
+        const batchPairKey = genUnlockKey();
         entry.locked = true;
         entry.adwallUrl = s.adwallUrl || '';
+        entry.unlockKey = batchPairKey;
         entry.unlocksPair = true;
         entry.next = partnerSlot ? partnerSlot.hash : nextHash;
+        s._pairUnlockKey = batchPairKey;
       } else if (p.type === 'pair-b') {
-        // Free-after-ad chapter — still marked locked so localStorage is checked
         entry.locked = true;
+        const pairASlot = uploadedSlots.find(x => x.pattern.type === 'pair-a' && x.pattern.pairWith === p.n);
+        if (pairASlot && pairASlot._pairUnlockKey) entry.unlockKey = pairASlot._pairUnlockKey;
+      } else if (entry.locked) {
+        entry.unlockKey = genUnlockKey();
       }
 
       hashmap[s.hash] = entry;

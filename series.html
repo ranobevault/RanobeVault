@@ -259,11 +259,13 @@ if (!seriesId) { location.href = 'index.html'; }
 
 async function init() {
   try {
-    const [seriesRes, chaptersRes] = await Promise.all([
+    const [seriesRes, chaptersRes, hashmapRes] = await Promise.all([
       fetch('data/series.json'),
-      fetch(`data/chapters/${seriesId}-index.json`).catch(() => null)
+      fetch(`data/chapters/${seriesId}-index.json`).catch(() => null),
+      fetch('data/hashmap.json').catch(() => null)
     ]);
     const allSeries = await seriesRes.json();
+    window.cachedHashmap = hashmapRes ? await hashmapRes.json().catch(() => ({})) : {};
     const series = allSeries.find(s => s.id === seriesId);
     if (!series) { document.getElementById('series-title').textContent = 'Series not found'; return; }
 
@@ -334,6 +336,12 @@ function setActive(el) {
   el.classList.add('active');
 }
 
+function isUnlocked(entry) {
+  if (!entry || !entry.locked) return true;
+  if (!entry.unlockKey) return false;
+  return localStorage.getItem(`rv_key_${entry.unlockKey}`) === '1';
+}
+
 function renderChapters(chapters) {
   const list = document.getElementById('chapter-list');
   const notice = document.getElementById('ad-notice');
@@ -342,6 +350,16 @@ function renderChapters(chapters) {
   if (!chapters.length) { list.innerHTML = '<div class="loading">No chapters found.</div>'; return; }
   list.innerHTML = chapters.map(ch => {
     if (ch.locked) {
+      // Check localStorage using the unlockKey from the cached hashmap
+      const hmEntry = (window.cachedHashmap && window.cachedHashmap[ch.hash]) || null;
+      const unlocked = hmEntry ? isUnlocked(hmEntry) : false;
+      if (unlocked) {
+        return `<a class="chapter-item" href="chapter.html?h=${ch.hash}">
+          <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
+          <span class="ch-title">${ch.title}</span>
+          <span class="ch-badge unlocked">✓ Unlocked</span>
+        </a>`;
+      }
       return `<a class="chapter-item locked" href="javascript:void(0)" data-hash="${ch.hash}" data-title="${ch.title.replace(/"/g,'&quot;')}" onclick="handleLocked(this.dataset.hash,this.dataset.title)">
         <span class="ch-num">Vol.${ch.volume} Ch.${ch.chapter}</span>
         <span class="ch-title">${ch.title}</span>
@@ -356,14 +374,21 @@ function renderChapters(chapters) {
   }).join('');
 }
 
-async function handleLocked(hash, title) {
-  try {
-    const res = await fetch('data/hashmap.json');
-    const hashmap = await res.json();
-    const entry = hashmap[hash];
-    const adwallUrl = entry && entry.adwallUrl;
-    if (adwallUrl) window.location.href = adwallUrl;
-  } catch(e) {}
+function handleLocked(hash, title) {
+  // Use cached hashmap — already loaded during init
+  const entry = window.cachedHashmap && window.cachedHashmap[hash];
+  if (!entry) return;
+
+  // Already unlocked? Navigate directly
+  if (isUnlocked(entry)) {
+    window.location.href = `chapter.html?h=${hash}`;
+    return;
+  }
+
+  // Redirect to adwall — the destination URL (set in Linkvertise) is:
+  // chapter.html?h={hash}&unlock={unlockKey}
+  // When user completes the ad and lands there, the key is auto-saved to localStorage
+  if (entry.adwallUrl) window.location.href = entry.adwallUrl;
 }
 
 

@@ -359,6 +359,16 @@
 <script>
 const params = new URLSearchParams(location.search);
 const hash = params.get('h');
+const unlockParam = params.get('unlock');
+
+// If the URL contains ?unlock=, the user just came back from the ad — save the key
+if (unlockParam) {
+  localStorage.setItem(`rv_key_${unlockParam}`, '1');
+  // Clean the URL so the key isn't visible or shareable
+  const cleanUrl = `${location.pathname}?h=${hash}`;
+  history.replaceState(null, '', cleanUrl);
+}
+
 let chapterData = null;
 let hashmapData = null;
 let currentEntry = null;
@@ -370,6 +380,12 @@ if (!hash) { location.href = 'index.html'; }
 // Apply saved settings immediately
 applyFontSize();
 applyMode();
+
+function isUnlocked(entry) {
+  if (!entry || !entry.locked) return true;
+  if (!entry.unlockKey) return false;
+  return localStorage.getItem(`rv_key_${entry.unlockKey}`) === '1';
+}
 
 async function init() {
   try {
@@ -383,6 +399,13 @@ async function init() {
     }
 
 
+
+    // Gate: if chapter is locked and key not in localStorage, show adwall
+    if (currentEntry.locked && !isUnlocked(currentEntry)) {
+      showAdwall(hash);
+      updateBackLink();
+      return;
+    }
 
     // Load chapter JSON
     const chRes = await fetch(`data/chapters/${currentEntry.file}`);
@@ -499,12 +522,12 @@ function renderChapter() {
           <div class="nav-label">≡</div>
           <div class="nav-ch-title">All Chapters</div>
         </a>
-        ${nextEntry && !nextEntry.locked
+        ${nextEntry && (!nextEntry.locked || isUnlocked(nextEntry))
           ? `<a class="nav-chapter-btn" href="chapter.html?h=${entry.next}">
               <div class="nav-label">Next ▶</div>
               <div class="nav-ch-title">Ch. ${nextEntry.chapter}</div>
              </a>`
-          : nextEntry && nextEntry.locked
+          : nextEntry && nextEntry.locked && !isUnlocked(nextEntry)
           ? `<span class="nav-chapter-btn locked-btn" onclick="showAdwall('${entry.next}')">
               <div class="nav-label">Next ▶</div>
               <div class="nav-ch-title">Ch. ${nextEntry.chapter} <span class="locked-tag">FREE</span></div>
@@ -532,13 +555,11 @@ function showAdwall(targetHash) {
   const entry = targetHash ? hashmapData[targetHash] : currentEntry;
 
   // Already unlocked? Navigate directly
-  if (localStorage.getItem(`unlocked_${unlockHash}`) === '1') {
+  if (isUnlocked(entry)) {
     window.location.href = `chapter.html?h=${unlockHash}`;
     return;
   }
 
-  // Store which hash we're trying to unlock
-  sessionStorage.setItem('pending_unlock_hash', unlockHash);
 
   const overlay = document.getElementById('adwall');
   const link = document.getElementById('adwall-link');
@@ -563,11 +584,8 @@ function handleAdwallClick(e) {
     e.preventDefault(); return;
   }
 
-  const unlockHash = sessionStorage.getItem('pending_unlock_hash') || hash;
-  // Mark as unlocked immediately before leaving the page
-  localStorage.setItem(`unlocked_${unlockHash}`, '1');
-  sessionStorage.setItem('show_bookmark_alert', unlockHash);
-  // Let the link navigate normally (opens ad page)
+  // Just navigate — unlock key is embedded in the Linkvertise destination URL (?unlock=...).
+  // When user completes the ad and lands back on chapter.html, the key is read and saved automatically.
 }
 
 function showBookmarkAlert() {
@@ -673,6 +691,10 @@ function showError(title, msg) {
 function escHtml(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 init();
+// Show bookmark alert if user just completed an ad unlock
+if (unlockParam) {
+  showBookmarkAlert();
+}
 showBookmarkAlert();
 
 /* ============================================================
